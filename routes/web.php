@@ -8,3 +8,6 @@ Route::get('/', function () {
 Route::get('/cadastro', function () {
     return view('cadastro');
 })->name('sgrs.cadastro');
+Route::get('/teste', function () {
+    return ('olá mundo');
+});
