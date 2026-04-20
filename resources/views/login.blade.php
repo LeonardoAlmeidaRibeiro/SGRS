@@ -92,7 +92,7 @@
 
 
                             <button type="submit" class="btn btn-lg btn-primary w-100 mb-5">Login</button>
-                            <a  href="{{ route('sgrs.cadastro') }}" type="button" class="btn btn-lg btn-secondary w-100 mb-5">Cadastre-se</a>
+                            <a  href="{{ route('painel.cadastro') }}" type="button" class="btn btn-lg btn-secondary w-100 mb-5">Cadastre-se</a>
 
                             <!--end::Google link-->
                         </div>
