@@ -54,7 +54,7 @@
                 <!--begin::Wrapper-->
                 <div class="w-lg-700px bg-body rounded shadow-sm p-10 p-lg-15 mx-auto">
                     <!--begin::Form-->
-                    <form class="form w-100" method="post" action="{{-- route('painel.cadastro.store') --}}">
+                    <form class="form w-100" method="post" action="#" onsubmit="executarCadastroEmpresa()">
                         @csrf
 
                         @if ($errors->all())
@@ -88,21 +88,21 @@
 
                             <!-- Nome da Empresa -->
                             <div class="fv-row mb-7">
-                                <label class="form-label fs-6 fw-bolder text-dark required">Nome da Empresa</label>
+                                <label class="form-label fs-6 fw-bolder text-dark ">Nome da Empresa</label>
                                 <input class="form-control form-control-lg form-control-solid" type="text" name="nome" value="{{ old('nome') }}" />
                             </div>
 
                             <div class="row g-5 mb-7">
                                 <!-- CNPJ -->
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">CNPJ</label>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">CNPJ</label>
                                     <input class="form-control form-control-lg form-control-solid" type="text" id="cnpj" name="cnpj" value="{{ old('cnpj') }}" placeholder="00.000.000/0000-00">
                                 </div>
 
                                 <!-- Tipo de Indústria -->
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">Tipo de Indústria</label>
-                                    <select class="form-select form-select-solid" data-control="select2" name="tipo_industria" required>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">Tipo de Indústria</label>
+                                    <select class="form-select form-select-solid" data-control="select2" name="tipo_industria" >
                                         <option value="">Selecione...</option>
                                         <option value="alimenticia" {{ old('tipo_industria') == 'alimenticia' ? 'selected' : '' }}>Alimentícia</option>
                                         <option value="quimica" {{ old('tipo_industria') == 'quimica' ? 'selected' : '' }}>Química</option>
@@ -122,11 +122,11 @@
                             <!-- Telefone e Email -->
                             <div class="row g-5 mb-7">
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">Telefone</label>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">Telefone</label>
                                     <input class="form-control form-control-lg form-control-solid" type="tel" name="telefone" value="{{ old('telefone') }}" id="telefone" />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">E-mail</label>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">E-mail</label>
                                     <input class="form-control form-control-lg form-control-solid" type="email" name="email" value="{{ old('email') }}" />
                                 </div>
                             </div>
@@ -142,17 +142,17 @@
 
                             <div class="row g-5 mb-7">
                                 <div class="col-md-4">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">CEP</label>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">CEP</label>
                                     <input class="form-control form-control-lg form-control-solid" type="text" name="cep" value="{{ old('cep') }}" id="cep" />
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">Endereço</label>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">Endereço</label>
                                     <input class="form-control form-control-lg form-control-solid" type="text" id="endereco" name="endereco" value="{{ old('endereco') }}" />
                                 </div>
 
                                 <div class="col-md-2">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">Número</label>
+                                    <label class="form-label fs-6 fw-bolder text-dark ">Número</label>
                                     <input class="form-control form-control-lg form-control-solid" type="text" name="numero" value="{{ old('numero') }}" />
                                 </div>
 
@@ -160,8 +160,8 @@
 
                             <div class="row g-5 mb-7">
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">Estado</label>
-                                    <select class="form-select form-select-solid" data-control="select2" data-placeholder="Selecione" name="estado" required id="estado">
+                                    <label class="form-label fs-6 fw-bolder text-dark ">Estado</label>
+                                    <select class="form-select form-select-solid" data-control="select2" data-placeholder="Selecione" name="estado"  id="estado">
                                         <option value="">Selecione</option>
                                         @foreach ( $estados as $estado )
                                         <option value="{{ $estado->id }}">{{ $estado->nome }}</option>
@@ -171,8 +171,8 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fs-6 fw-bolder text-dark required">Cidade</label>
-                                    <select class="form-select form-select-solid" data-control="select2" data-placeholder="Selecione" name="cidade" required id="cidade">
+                                    <label class="form-label fs-6 fw-bolder text-dark ">Cidade</label>
+                                    <select class="form-select form-select-solid" data-control="select2" data-placeholder="Selecione" name="cidade"  id="cidade">
                                         <option value="">Selecione</option>
                                         @foreach ( $cidades as $cidade )
                                         <option value="{{ $cidade->id }}">{{ $cidade->nome }}</option>
@@ -196,22 +196,22 @@
 
                                 <div class="row g-5 mb-7">
                                     <div class="col-md-6">
-                                        <label class="form-label fs-6 fw-bolder text-dark required">Nome do Administrador</label>
+                                        <label class="form-label fs-6 fw-bolder text-dark ">Nome do Administrador</label>
                                         <input class="form-control form-control-lg form-control-solid" type="text" name="admin_nome" value="{{ old('admin_nome') }}" />
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fs-6 fw-bolder text-dark required">E-mail do Administrador</label>
+                                        <label class="form-label fs-6 fw-bolder text-dark ">E-mail do Administrador</label>
                                         <input class="form-control form-control-lg form-control-solid" type="email" name="admin_email" value="{{ old('admin_email') }}" />
                                     </div>
                                 </div>
 
                                 <div class="row g-5 mb-7">
                                     <div class="col-md-6">
-                                        <label class="form-label fs-6 fw-bolder text-dark required">Senha</label>
+                                        <label class="form-label fs-6 fw-bolder text-dark ">Senha</label>
                                         <input class="form-control form-control-lg form-control-solid" type="password" name="senha" id="senha" />
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fs-6 fw-bolder text-dark required">Confirmar Senha</label>
+                                        <label class="form-label fs-6 fw-bolder text-dark ">Confirmar Senha</label>
                                         <input class="form-control form-control-lg form-control-solid" type="password" name="senha_confirmacao" />
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@
                             <!--begin::Termos e Condições-->
                             <div class="fv-row mb-10">
                                 <label class="form-check form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" name="termos" value="1" required />
+                                    <input class="form-check-input" type="checkbox" name="termos" value="1"  />
                                     <span class="form-check-label text-muted">
                                         Li e aceito os <a href="#" class="text-primary">Termos de Uso</a> e a
                                         <a href="#" class="text-primary">Política de Privacidade</a>
@@ -276,6 +276,244 @@
             $("#cep").mask("00000-000");
 
         });
+
+        $('#cep').on('blur', function () {
+            var cep = $(this).val().replace(/\D/g, '');
+
+            if (cep.length !== 8) return;
+            console.log(cep);
+            buscarEnderecoPorCep(cep);
+        });
+
+        function buscarEnderecoPorCep(cep) {
+            $.getJSON(`https://viacep.com.br/ws/${cep}/json/`, function (data) {
+
+                if (data.erro) {
+                    Swal.fire('Erro', 'CEP não encontrado', 'error');
+                    return;
+                }
+
+                // Preenche campos
+                $('#endereco').val(data.logradouro);
+
+                // Aqui você pode tentar setar estado/cidade se quiser
+
+                // Monta endereço completo
+                var enderecoCompleto = `${data.logradouro}, ${data.localidade}, ${data.uf}, Brasil`;
+                 console.log(enderecoCompleto);
+                buscarLatLong(enderecoCompleto);
+            });
+        }
+
+        function buscarLatLong(endereco) {
+            $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`, function (data) {
+                                 console.log(data);
+
+                if (data.length > 0) {
+                    $('#latitude').val(data[0].lat);
+                    $('#longitude').val(data[0].lon);
+                } else {
+                    console.log('Não encontrou coordenadas');
+                }
+
+            });
+        }
+
+        function executarCadastroEmpresa() {
+    // Previne o envio padrão do formulário
+    event.preventDefault();
+    
+    var headers = {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+
+    // Capturando todos os campos do formulário
+    var nome = $("input[name='nome']").val();
+    var cnpj = $("#cnpj").val();
+    var tipo_industria = $("select[name='tipo_industria']").val();
+    var telefone = $("#telefone").val();
+    var email = $("input[name='email']").val();
+    var cep = $("#cep").val();
+    var endereco = $("#endereco").val();
+    var numero = $("input[name='numero']").val();
+    var estado = $("#estado").val();
+    var cidade = $("#cidade").val();
+    var latitude = $("#latitude").val();
+    var longitude = $("#longitude").val();
+    var admin_nome = $("input[name='admin_nome']").val();
+    var admin_email = $("input[name='admin_email']").val();
+    var senha = $("#senha").val();
+    var senha_confirmacao = $("input[name='senha_confirmacao']").val();
+    var termos = $("input[name='termos']:checked").val();
+
+    // Validações dos campos obrigatórios
+    if(nome == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Nome da Empresa'});
+        return false;
+    }
+    if(cnpj == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo CNPJ'});
+        return false;
+    }
+    if(tipo_industria == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Selecione o Tipo de Indústria'});
+        return false;
+    }
+    if(telefone == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Telefone'});
+        return false;
+    }
+    if(email == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo E-mail'});
+        return false;
+    }
+    if(cep == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo CEP'});
+        return false;
+    }
+    if(endereco == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Endereço'});
+        return false;
+    }
+    if(numero == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Número'});
+        return false;
+    }
+    if(estado == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Selecione o Estado'});
+        return false;
+    }
+    if(cidade == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Selecione a Cidade'});
+        return false;
+    }
+    if(admin_nome == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Nome do Administrador'});
+        return false;
+    }
+    if(admin_email == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo E-mail do Administrador'});
+        return false;
+    }
+    if(senha == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Senha'});
+        return false;
+    }
+    if(senha_confirmacao == ''){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Preencha o campo Confirmar Senha'});
+        return false;
+    }
+    if(senha !== senha_confirmacao){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'As senhas não conferem'});
+        return false;
+    }
+    if(termos != '1'){
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Você precisa aceitar os Termos de Uso e Política de Privacidade'});
+        return false;
+    }
+
+    // Validação de formato de CNPJ (opcional)
+    if(cnpj.length < 14) {
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'CNPJ inválido'});
+        return false;
+    }
+
+    // Validação de formato de CEP (opcional)
+    if(cep.length < 8) {
+        Swal.fire({ icon: 'error', title: 'Oops...', text: 'CEP inválido'});
+        return false;
+    }
+
+        
+        var dados = {
+
+            "nome": nome,
+            "cnpj": cnpj,
+            "tipo_industria": tipo_industria,
+            "telefone": telefone,
+            "email": email,
+            "cep": cep,
+            "endereco": endereco,
+            "numero": numero,
+            "estado": estado,
+            "cidade": cidade,
+            "latitude": latitude,
+            "longitude": longitude,
+            "admin_nome": admin_nome,
+            "admin_email": admin_email,
+            "senha": senha,
+            "senha_confirmation": senha_confirmacao,
+            "termos": termos,
+        };
+
+
+    $.ajax({
+        url: "{{ route('empresa.store') }}",
+        type: "POST",
+        data: dados,
+        headers: headers,
+        error: function(data) {
+            if(data.status === 422) {
+                var message = '';
+                $.each(data.responseJSON.errors, function(campo, conteudo) {
+                    message = message + conteudo + '<br>';
+                });
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Erro de Validação', 
+                    html: message 
+                });
+            } else {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Oops...', 
+                    text: 'Ocorreu um erro ao processar sua solicitação' 
+                });
+            }
+        },
+        success: function(data) {
+            var message = '';
+            var success = '';
+            var id = '';
+
+            $.each(data, function(campo, conteudo) {
+                if(campo == 'success') success = conteudo;
+                if(campo == 'message') message = conteudo;
+                if(campo == 'id') id = conteudo;
+            });
+
+            if(success == true){
+                $("input[name='nome']").val("");
+                $("#cnpj").val("");
+                $("select[name='tipo_industria']").val("");
+                $("#telefone").val("");
+                $("input[name='email']").val("");
+                $("#cep").val("");
+                $("#endereco").val("");
+                $("input[name='numero']").val("");
+                $("#estado").val("");
+                $("#cidade").val("");
+                $("input[name='admin_nome']").val("");
+                $("input[name='admin_email']").val("");
+                $("#senha").val("");
+                $("input[name='senha_confirmacao']").val("");
+                $("input[name='termos']").prop('checked', false);
+                
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Sucesso!', 
+                    text: message,
+                    timer: 3000,
+                    showConfirmButton: false
+                }).then(function() {
+                    window.location.href = "{{ route('painel.login') }}";
+                });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Oops...', text: message });
+            }
+        }
+    });
+}
 
     </script>
 

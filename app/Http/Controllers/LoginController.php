@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Cidade;
 use App\Models\Estado;
+use App\Models\Empresa;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -23,43 +27,121 @@ class LoginController extends Controller
         return view('cadastro', compact('estados', 'cidades'));
     }
 
-
-    public function buscarPorNome(Request $request)
+    public function store(Request $request)
     {
-        $cidadeNome = $request->cidade;
-        $uf = $request->uf;
+        // Validação
+        $validator = Validator::make($request->all(), [
+            'nome' => 'required|string|max:255',
+            'cnpj' => 'required|string|unique:empresas,cnpj',
+            'tipo_industria' => 'required',
+            'telefone' => 'required',
+            'email' => 'required|email|unique:empresas,email',
 
-        // Busca o estado pela sigla OU pelo nome
-        $estado = Estado::where('sigla', $uf)
-            ->orWhere('nome', 'LIKE', "%{$uf}%")
-            ->first();
+            'cep' => 'required',
+            'endereco' => 'required',
+            'numero' => 'required',
+            'estado' => 'required',
+            'cidade' => 'required',
 
-        if (!$estado) {
-            return response()->json([
-                'estado_id' => null,
-                'cidade_id' => null,
-                'estado_nome' => null,
-                'cidade_nome' => null
-            ]);
-        }
+            'admin_nome' => 'required|string|max:255',
+            'admin_email' => 'required|email|unique:users,email',
 
-        // Busca a cidade
-        $cidade = Cidade::where('nome', $cidadeNome)
-            ->where('estado_id', $estado->id)
-            ->first();
+            'senha' => 'required|min:6|confirmed',
 
-        if (!$cidade) {
-            $cidade = Cidade::where('nome', 'LIKE', "%{$cidadeNome}%")
-                ->where('estado_id', $estado->id)
-                ->first();
-        }
-
-        return response()->json([
-            'estado_id' => $estado->id,
-            'estado_nome' => $estado->nome,
-            'estado_sigla' => $estado->sigla, // Adicione isso
-            'cidade_id' => $cidade ? $cidade->id : null,
-            'cidade_nome' => $cidade ? $cidade->nome : null
+            'termos' => 'required|accepted',
+        ], [
+            'senha.confirmed' => 'As senhas não conferem',
+            'termos.accepted' => 'Você precisa aceitar os termos',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Criar empresa
+            $empresa = Empresa::create([
+                'nome' => $request->nome,
+                'email' => $request->email,
+                'tipo_industria' => $request->tipo_industria,
+                'cnpj' => $request->cnpj,
+                'telefone' => $request->telefone,
+                'cep' => $request->cep,
+                'endereco' => $request->endereco,
+                'numero' => $request->numero,
+                'cidade' => $request->cidade,
+                'estado' => $request->estado,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+            ]);
+
+            // 2. Criar usuário admin
+            $usuario = User::create([
+                'empresa_id' => $empresa->id,
+                'name' => $request->admin_nome,
+                'email' => $request->admin_email,
+                'password' => Hash::make($request->senha),
+                'perfil' => 'admin',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empresa cadastrada com sucesso!',
+                'id' => $empresa->id
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao cadastrar empresa',
+                'error' => $e->getMessage() // pode remover em produção
+            ], 500);
+        }
+    }
+
+    public function access(Request $request)
+    {
+        // Validação
+        $request->validate([
+            'email' => 'required|email',
+            'senha' => 'required',
+        ]);
+
+        // Tentativa de login
+        if (Auth::attempt([
+            'email' => $request->email,
+            'password' => $request->senha
+        ])) {
+
+            $request->session()->regenerate();
+
+            return redirect()->route('painel.home');
+        }
+
+        return back()->withErrors([
+            'email' => 'E-mail ou senha inválidos'
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        // Invalida sessão
+        $request->session()->invalidate();
+
+        // Regenera token CSRF
+        $request->session()->regenerateToken();
+
+        return redirect()->route('painel.login');
     }
 }

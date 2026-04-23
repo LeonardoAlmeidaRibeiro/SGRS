@@ -9,8 +9,7 @@
     <meta NAME="robots" CONTENT="noarchive">
     <meta NAME="robots" CONTENT="index, nofollow, noarchive">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; img-src 'self'; child-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; ">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; child-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; ">
     <!--begin::Fonts-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
     <!--end::Fonts-->
@@ -25,6 +24,7 @@
     #botmanWidgetRoot {
         display: none;
     }
+
 </style>
 
 <body id="kt_body" class="header-tablet-and-mobile-fixed aside-enabled">
@@ -32,8 +32,7 @@
     <!--begin::Main-->
     <div class="d-flex flex-column flex-root">
         <!--begin::Authentication - Sign-in -->
-        <div class="d-flex flex-column flex-column-fluid bgi-position-y-bottom position-x-center bgi-no-repeat bgi-size-contain bgi-attachment-fixed"
-            style="background-color: #f3f3f3;">
+        <div class="d-flex flex-column flex-column-fluid bgi-position-y-bottom position-x-center bgi-no-repeat bgi-size-contain bgi-attachment-fixed" style="background-color: #f3f3f3;">
             <!--begin::Content-->
             <div class="d-flex flex-center flex-column flex-column-fluid p-10 pb-lg-20">
                 <!--begin::Logo-->
@@ -46,15 +45,15 @@
                 <!--begin::Wrapper-->
                 <div class="w-lg-500px bg-body rounded shadow-sm p-10 p-lg-15 mx-auto">
                     <!--begin::Form-->
-                    <form class="form w-100"  method="post" action="{{-- route('painel.login') --}}">
+                    <form class="form w-100"method="POST" action="{{ route('painel.access') }}">
                         @csrf
 
                         @if ($errors->all())
-                            @foreach ($errors->all() as $error)
-                                <div class="alert alert-danger" role="alert">
-                                    {{ $error }}
-                                </div>
-                            @endforeach
+                        @foreach ($errors->all() as $error)
+                        <div class="alert alert-danger" role="alert">
+                            {{ $error }}
+                        </div>
+                        @endforeach
                         @endif
                         <!--begin::Heading-->
                         <!--begin::Input group-->
@@ -63,8 +62,7 @@
                             <label class="form-label fs-6 fw-bolder text-dark">Usuário</label>
                             <!--end::Label-->
                             <!--begin::Input-->
-                            <input class="form-control form-control-lg form-control-solid" type="text" name="usuario"
-                                autocomplete="on" />
+                            <input class="form-control form-control-lg form-control-solid" type="email" name="email" autocomplete="on" />
                             <!--end::Input-->
                         </div>
                         <!--end::Input group-->
@@ -79,8 +77,7 @@
                             </div>
                             <!--end::Wrapper-->
                             <!--begin::Input-->
-                            <input class="form-control form-control-lg form-control-solid" type="password"
-                                name="senha" autocomplete="on" />
+                            <input class="form-control form-control-lg form-control-solid" type="password" name="senha" autocomplete="on" />
                             <!--end::Input-->
 
 
@@ -92,7 +89,7 @@
 
 
                             <button type="submit" class="btn btn-lg btn-primary w-100 mb-5">Login</button>
-                            <a  href="{{ route('painel.cadastro') }}" type="button" class="btn btn-lg btn-secondary w-100 mb-5">Cadastre-se</a>
+                            <a href="{{ route('painel.cadastro') }}" type="button" class="btn btn-lg btn-secondary w-100 mb-5">Cadastre-se</a>
 
                             <!--end::Google link-->
                         </div>

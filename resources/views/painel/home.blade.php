@@ -23,8 +23,8 @@ $chefia = [20, 23, 67, 8, 18, 68];
 
                             <div class="card-header border-0 pt-5">
                                 <h3 class="card-title align-items-start flex-column">
-                                    <span class="card-label fw-bolder text-dark">Serviços DTEP - Eventos</span>
-                                    <span class="text-muted mt-1 fw-bold fs-7">Acesse os serviços abaixo</span>
+                                        <span class="card-label fw-bolder text-dark">SGRS – Sistema de Gestão de Resíduos Sustentáveis</span>
+                                        <span class="text-muted mt-1 fw-bold fs-7">Acesse os serviços abaixo</span>
                                 </h3>
                             </div>
 
@@ -38,7 +38,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                             <!--begin::Item-->
                                             <div class="d-flex align-items-center mb-7">
                                                 <div class="symbol symbol-50px me-5">
-                                                    <a href="{{route('eventos.create')}}">
+                                                    <a href="#">
                                                         <span class="symbol-label bg-light-primary">
                                                             <!--begin::Svg Icon | path: assets/media/icons/duotune/general/gen014.svg-->
                                                             <span class="svg-icon svg-icon-primary svg-icon-2hx "><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -52,7 +52,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                                 </div>
 
                                                 <div class="d-flex flex-column">
-                                                    <a href="{{route('eventos.create')}}" class="text-dark text-hover-primary fs-6 fw-bolder">Cadastrar Evento</a>
+                                                    <a href="#" class="text-dark text-hover-primary fs-6 fw-bolder">Cadastrar Evento</a>
                                                 </div>
 
                                             </div>
@@ -85,7 +85,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                                 </div>
 
                                                 <div class="d-flex flex-column">
-                                                    <a href="{{route('cadastroParticipanteCpf.index')}}" class="text-dark text-hover-primary fs-6 fw-bolder">Cadastrar Participante</a>
+                                                    <a href="#" class="text-dark text-hover-primary fs-6 fw-bolder">Cadastrar Participante</a>
                                                 </div>
 
                                             </div>
@@ -106,7 +106,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                             <!--begin::Item-->
                                             <div class="d-flex align-items-center mb-7">
                                                 <div class="symbol symbol-50px me-5">
-                                                    <a href="{{route('autorizarCertificados.index')}}">
+                                                    <a href="#">
                                                         <span class="symbol-label bg-light-primary">
                                                             <!-- icone -->
                                                             <i class="las la-clipboard-check fs-3x text-primary"></i>
@@ -115,7 +115,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                                 </div>
 
                                                 <div class="d-flex flex-column">
-                                                    <a href="{{route('autorizarCertificados.index')}}" class="text-dark text-hover-primary fs-6 fw-bolder">Autorizar Certificados</a>
+                                                    <a href="#" class="text-dark text-hover-primary fs-6 fw-bolder">Autorizar Certificados</a>
                                                 </div>
 
                                             </div>
@@ -134,7 +134,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                             <!--begin::Item-->
                                             <div class="d-flex align-items-center mb-7">
                                                 <div class="symbol symbol-50px me-5">
-                                                    <a href="{{route('relatorios.index')}}">
+                                                    <a href="#">
                                                         <span class="symbol-label bg-light-primary">
                                                             <span class="svg-icon svg-icon-2x svg-icon-primary">
                                                                 <!--begin::Svg Icon | path: assets/media/icons/duotune/graphs/gra012.svg-->
@@ -148,7 +148,7 @@ $chefia = [20, 23, 67, 8, 18, 68];
                                                 </div>
 
                                                 <div class="d-flex flex-column">
-                                                    <a href="{{route('relatorios.index')}}" class="text-dark text-hover-primary fs-6 fw-bolder">Relatórios</a>
+                                                    <a href="#" class="text-dark text-hover-primary fs-6 fw-bolder">Relatórios</a>
                                                 </div>
 
                                             </div>

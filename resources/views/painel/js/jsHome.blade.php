@@ -6,7 +6,7 @@
     }
 
     $.ajax({
-        url: "{{ route('painel.grafico') }}",
+        url: "#",
         type: "GET",
         headers: headers,
         success: function(data) {
