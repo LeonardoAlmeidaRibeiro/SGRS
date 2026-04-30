@@ -12,16 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('classificacoes_residuo', function (Blueprint $table) {
-    $table->id();
+            $table->id();
 
-    $table->string('nome'); // Classe I - Perigoso
-    $table->string('codigo'); // NBR10004/I
+            $table->string('nome'); // Classe I - Perigoso
+            $table->string('codigo'); // NBR10004/I
 
-    $table->boolean('exige_mtr')->default(false);
-    $table->boolean('exige_cadri')->default(false);
+            $table->boolean('exige_mtr')->default(false);
+            $table->boolean('exige_cadri')->default(false);
 
-    $table->timestamps();
-});
+            $table->timestamps();
+        });
     }
 
     /**

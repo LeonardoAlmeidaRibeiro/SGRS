@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\Validator;
 
 class UnidadeMedidaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         $unidades = UnidadeMedida::all();

@@ -14,23 +14,31 @@ class ClassificacaoResiduoController extends Controller
     public function index()
     {
         $classificacoes = ClassificacaoResiduo::all();
-        return response()->json([
-            'success' => true,
-            'data' => $classificacoes
-        ]);
+        return view('painel.classificacao_residuo.index', compact('classificacoes'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'nome' => 'required|string|max:255|unique:classificacoes_residuo',
-            'codigo' => 'required|string|max:50',
-            'exige_mtr' => 'boolean',
-            'exige_cadri' => 'boolean'
-        ]);
+
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'nome' => 'required|string|max:255|unique:classificacoes_residuo',
+                'codigo' => 'required|string|max:50|unique:classificacoes_residuo',
+                'exige_mtr' => 'boolean',
+                'exige_cadri' => 'boolean'
+            ],
+            [
+                'nome.required' => 'O nome é obrigatório.',
+                'nome.unique' => 'Este nome já está cadastrado.',
+
+                'codigo.required' => 'O código é obrigatório.',
+                'codigo.unique' => 'Este código já está cadastrado.',
+
+                'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
+                'codigo.max' => 'O código deve ter no máximo 50 caracteres.',
+            ]
+        );
 
         if ($validator->fails()) {
             return response()->json([
@@ -38,8 +46,11 @@ class ClassificacaoResiduoController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+        $data = $request->all();
+        $data['exige_mtr'] = $request->boolean('exige_mtr');
+        $data['exige_cadri'] = $request->boolean('exige_cadri');
 
-        $classificacao = ClassificacaoResiduo::create($request->all());
+        $classificacao = ClassificacaoResiduo::create($data);
 
         return response()->json([
             'success' => true,
@@ -48,29 +59,6 @@ class ClassificacaoResiduoController extends Controller
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
-        $classificacao = ClassificacaoResiduo::find($id);
-
-        if (!$classificacao) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Classificação não encontrada'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $classificacao
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $classificacao = ClassificacaoResiduo::find($id);
@@ -105,9 +93,6 @@ class ClassificacaoResiduoController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $classificacao = ClassificacaoResiduo::find($id);

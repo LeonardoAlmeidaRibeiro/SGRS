@@ -30,9 +30,9 @@ return [
         'array' => 'The :attribute field must have between :min and :max items.',
         'file' => 'The :attribute field must be between :min and :max kilobytes.',
         'numeric' => 'The :attribute field must be between :min and :max.',
-        'string' => 'The :attribute field must be between :min and :max characters.',
+        'string' => 'O campo :attribute não pode ter mais que :max caracteres.',
     ],
-    'boolean' => 'The :attribute field must be true or false.',
+    'boolean' => 'O campo :attribute deve ser verdadeiro ou falso.',
     'can' => 'The :attribute field contains an unauthorized value.',
     'confirmed' => 'The :attribute field confirmation does not match.',
     'contains' => 'The :attribute field is missing a required value.',
@@ -69,7 +69,7 @@ return [
         'array' => 'The :attribute field must have :value items or more.',
         'file' => 'The :attribute field must be greater than or equal to :value kilobytes.',
         'numeric' => 'The :attribute field must be greater than or equal to :value.',
-        'string' => 'The :attribute field must be greater than or equal to :value characters.',
+        'string' => 'O campo :attribute deve ser um texto.',
     ],
     'hex_color' => 'The :attribute field must be a valid hexadecimal color.',
     'image' => 'The :attribute field must be an image.',
@@ -198,6 +198,9 @@ return [
     'attributes' => [
         'nome' => 'nome',
         'fator_conversao_para_kg' => 'fator de conversão para kg',
+        'codigo' => 'código',
+        'exige_mtr' => 'exige MTR',
+        'exige_cadri' => 'exige CADRI',
     ],
 
 ];

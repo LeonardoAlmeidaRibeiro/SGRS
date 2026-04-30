@@ -7,7 +7,7 @@
             <!--begin::Modal header-->
             <div class="modal-header">
                 <!--begin::Modal title-->
-                <h2>Editar Unidade de Medida</h2>
+                <h2>Editar Classificação de Resíduo</h2>
                 <!--end::Modal title-->
                 <!--begin::Close-->
                 <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
@@ -32,16 +32,49 @@
                     <!--begin::Input group-->
                     <div class="d-flex flex-column mb-7 fv-row">
                         <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
-                            <span class="required">Nome</span>
+                            <span class="required">nome</span>
                         </label>
                         <input type="hidden" id="id_edit" name="id_edit" />
                         <input type="text" class="form-control form-control-solid" id="nome_edit" name="nome_edit" />
+                    </div>
+
+                    <div class="d-flex flex-column mb-7 fv-row">
                         <div class="d-flex flex-column mb-7 fv-row">
                             <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
-                                <span class="required">Fator de Conversão para KG</span>
+                                <span class="required">Código</span>
                             </label>
-                            <input type="number" class="form-control form-control-solid" id="fator_conversao_para_kg_edit" name="fator_conversao_para_kg_edit" step="0.0001" />
+                            <input type="text" class="form-control form-control-solid" id="codigo_edit" name="codigo_edit" />
                         </div>
+                    </div>
+                    <!--end::Input group-->
+
+                    <!--begin::Input group - Exige MTR-->
+                    <div class="d-flex flex-column mb-7 fv-row">
+                        <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
+                            <span>Exige MTR</span>
+                        </label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="exige_mtr_edit" id="exige_mtr_edit" value="1" id="exige_mtr_cadastro">
+                            <label class="form-check-label" for="exige_mtr_cadastro">
+                                Manifesto de Transporte de Resíduos
+                            </label>
+                        </div>
+                        <div class="text-muted fs-7 mt-1">Define se esta classificação exige MTR</div>
+                    </div>
+                    <!--end::Input group-->
+
+                    <!--begin::Input group - Exige CADRI-->
+                    <div class="d-flex flex-column mb-7 fv-row">
+                        <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
+                            <span>Exige CADRI</span>
+                        </label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="exige_cadri_edit" id="exige_cadri_edit" value="1" id="exige_cadri_cadastro">
+                            <label class="form-check-label" for="exige_cadri_cadastro">
+                                Cadastro de Resíduos Industriais
+                            </label>
+                        </div>
+                        <div class="text-muted fs-7 mt-1">Define se esta classificação exige CADRI</div>
                     </div>
                     <!--end::Input group-->
 
