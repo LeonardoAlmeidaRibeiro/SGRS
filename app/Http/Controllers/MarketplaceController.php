@@ -24,6 +24,10 @@ class MarketplaceController extends Controller
                     ->orWhereNotNull('residuos.licenca_ambiental_url');
             });
 
+        if (Auth::check() && Auth::user()->empresa_id) {
+            $query->where('residuos.empresa_id', '!=', Auth::user()->empresa_id);
+        }
+
         if ($request->filled('tipo_material')) {
             $query->where('residuos.tipo_material', 'like', '%' . $request->tipo_material . '%');
         }
@@ -62,10 +66,22 @@ class MarketplaceController extends Controller
             $query->where('residuos.estado', strtoupper($request->estado));
         }
 
+        if ($request->boolean('somente_reputadas')) {
+            $query->whereHas('empresa', function ($empresa) {
+                $empresa->where('restrita_por_reputacao', false)
+                    ->where(function ($q) {
+                        $q->where('reputacao_media', '>=', 3)
+                            ->orWhere('reputacao_media', 0);
+                    })
+                    ->where('taxa_conformidade', '>=', 80);
+            });
+        }
+
         $residuos = $query->orderBy('residuos.created_at', 'desc')->paginate(12)->withQueryString();
         $classificacoes = ClassificacaoResiduo::orderBy('nome')->get();
+        $empresaLogada = optional(Auth::user())->empresa;
 
-        return view('painel.marketplace.index', compact('residuos', 'classificacoes'));
+        return view('painel.marketplace.index', compact('residuos', 'classificacoes', 'empresaLogada'));
     }
 
     public function show($id, MatchInteligenteService $matchService)
@@ -83,7 +99,9 @@ class MarketplaceController extends Controller
 
         $matches = $matchService->recomendarParaResiduo($residuo);
 
-        return view('painel.marketplace.visualizar', compact('residuo', 'matches'));
+        $empresaLogada = optional(Auth::user())->empresa;
+
+        return view('painel.marketplace.visualizar', compact('residuo', 'matches', 'empresaLogada'));
     }
 
     public function reservar($id, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService)

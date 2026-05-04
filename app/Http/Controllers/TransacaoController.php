@@ -7,14 +7,20 @@ use App\Models\Residuo;
 use App\Models\Transacao;
 use App\Services\ImpactoCalculatorService;
 use App\Services\RastreabilidadeService;
+use App\Services\ValidacaoLegalService;
+use App\Support\EmpresaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class TransacaoController extends Controller
 {
+    use EmpresaScope;
+
     public function index()
     {
-        $transacoes = Transacao::with(['residuo', 'empresaOrigem', 'empresaDestino'])->latest()->paginate(15);
+        $query = Transacao::with(['residuo', 'empresaOrigem', 'empresaDestino']);
+        $this->escopoTransacaoEmpresa($query);
+        $transacoes = $query->latest()->paginate(15);
 
         return view('painel.transacoes.index', compact('transacoes'));
     }
@@ -24,7 +30,7 @@ class TransacaoController extends Controller
         return view('painel.transacoes.form', $this->options());
     }
 
-    public function store(Request $request, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService)
+    public function store(Request $request, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService, ValidacaoLegalService $validacaoLegalService)
     {
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
         if ($validator->fails()) {
@@ -38,6 +44,11 @@ class TransacaoController extends Controller
         }
 
         $transacao = Transacao::create($dados);
+        $bloqueioStatus = $validacaoLegalService->validarTransacaoParaStatus($transacao, $transacao->status);
+        if ($bloqueioStatus) {
+            $transacao->delete();
+            return back()->withInput()->with('swal_error', $bloqueioStatus);
+        }
         $this->sincronizarResiduo($transacao);
         $this->calcularImpacto($transacao, $impactoService);
         $rastreabilidadeService->registrar($transacao, 'transacao_criada', 'Transacao criada manualmente no painel.');
@@ -47,18 +58,24 @@ class TransacaoController extends Controller
 
     public function show(Transacao $transacao)
     {
-        $transacao->load(['residuo.unidade', 'empresaOrigem', 'empresaDestino', 'documentos', 'impacto', 'avaliacoes']);
+        $this->autorizarTransacao($transacao);
+
+        $transacao->load(['residuo.unidade', 'empresaOrigem', 'empresaDestino', 'empresaTransportadora', 'documentos', 'impacto', 'avaliacoes', 'logsRastreabilidade.empresa', 'logsRastreabilidade.usuario']);
 
         return view('painel.transacoes.visualizar', compact('transacao'));
     }
 
     public function edit(Transacao $transacao)
     {
+        $this->autorizarTransacao($transacao);
+
         return view('painel.transacoes.form', array_merge($this->options(), compact('transacao')));
     }
 
-    public function update(Request $request, Transacao $transacao, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService)
+    public function update(Request $request, Transacao $transacao, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService, ValidacaoLegalService $validacaoLegalService)
     {
+        $this->autorizarTransacao($transacao);
+
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -70,7 +87,15 @@ class TransacaoController extends Controller
             return back()->withInput()->with('swal_error', $bloqueio);
         }
 
-        $transacao->update($dados);
+        $snapshot = $transacao->getAttributes();
+        $transacao->fill($dados);
+        $bloqueioStatus = $validacaoLegalService->validarTransacaoParaStatus($transacao, $transacao->status);
+        if ($bloqueioStatus) {
+            $transacao->setRawAttributes($snapshot, true);
+            return back()->withInput()->with('swal_error', $bloqueioStatus);
+        }
+
+        $transacao->save();
         $this->sincronizarResiduo($transacao);
         $this->calcularImpacto($transacao, $impactoService);
         $rastreabilidadeService->registrar($transacao, 'transacao_atualizada', 'Transacao atualizada no painel.');
@@ -80,6 +105,8 @@ class TransacaoController extends Controller
 
     public function destroy(Transacao $transacao)
     {
+        $this->autorizarTransacao($transacao);
+
         $transacao->delete();
 
         return redirect()->route('transacoes.index')->with('swal_success', 'Transação excluída com sucesso!');
@@ -88,8 +115,13 @@ class TransacaoController extends Controller
     private function options(): array
     {
         return [
-            'residuos' => Residuo::with('empresa')->orderBy('tipo_material')->get(),
-            'empresas' => Empresa::orderBy('nome')->get(),
+            'residuos' => Residuo::with('empresa')
+                ->when($this->empresaLogadaId(), function ($q) {
+                    $q->where('empresa_id', $this->empresaLogadaId());
+                })
+                ->orderBy('tipo_material')
+                ->get(),
+            'empresas' => $this->empresasRelacionadas(),
             'statusOptions' => ['pendente' => 'Pendente', 'aprovado' => 'Aprovado', 'concluido' => 'Concluído', 'cancelado' => 'Cancelado'],
         ];
     }
@@ -127,6 +159,14 @@ class TransacaoController extends Controller
             return 'Informe residuo e empresa destino validos.';
         }
 
+        if ($this->empresaLogadaId() && !in_array((int) $this->empresaLogadaId(), [
+            (int) $dados['empresa_origem_id'],
+            (int) $dados['empresa_destino_id'],
+            (int) ($dados['empresa_transportadora_id'] ?? 0),
+        ], true)) {
+            return 'A transacao precisa pertencer a empresa logada.';
+        }
+
         if (optional($residuo->classificacao)->eh_perigoso && !$empresaDestino->podeReceberResiduoPerigoso()) {
             return 'Residuo perigoso so pode ser transferido para empresa com licenca ambiental especifica valida.';
         }
@@ -136,6 +176,41 @@ class TransacaoController extends Controller
         }
 
         return null;
+    }
+
+    private function autorizarTransacao(Transacao $transacao): void
+    {
+        $empresaId = $this->empresaLogadaId();
+
+        if (!$empresaId) {
+            return;
+        }
+
+        if (!in_array((int) $empresaId, [
+            (int) $transacao->empresa_origem_id,
+            (int) $transacao->empresa_destino_id,
+            (int) $transacao->empresa_transportadora_id,
+        ], true)) {
+            abort(403, 'Transacao nao pertence a empresa logada.');
+        }
+    }
+
+    private function empresasRelacionadas()
+    {
+        if (!$this->empresaLogadaId()) {
+            return Empresa::orderBy('nome')->get();
+        }
+
+        $transacoes = $this->escopoTransacaoEmpresa(Transacao::query())->get(['empresa_origem_id', 'empresa_destino_id', 'empresa_transportadora_id']);
+        $ids = $transacoes->pluck('empresa_origem_id')
+            ->merge($transacoes->pluck('empresa_destino_id'))
+            ->merge($transacoes->pluck('empresa_transportadora_id'))
+            ->push($this->empresaLogadaId())
+            ->filter()
+            ->unique()
+            ->values();
+
+        return Empresa::whereIn('id', $ids)->orderBy('nome')->get();
     }
 
     private function messages(): array

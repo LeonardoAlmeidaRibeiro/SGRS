@@ -6,6 +6,7 @@ use App\Models\ClassificacaoResiduo;
 use App\Models\Empresa;
 use App\Models\Residuo;
 use App\Models\UnidadeMedida;
+use App\Support\EmpresaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,16 @@ use Illuminate\Support\Facades\Validator;
 
 class ResiduoController extends Controller
 {
+    use EmpresaScope;
+
     public function index(Request $request)
     {
         $query = Residuo::with(['empresa', 'classificacao', 'unidade']);
+        $empresaLogadaId = $this->empresaLogadaId();
+
+        if ($empresaLogadaId) {
+            $query->where('empresa_id', $empresaLogadaId);
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -26,7 +34,7 @@ class ResiduoController extends Controller
             $query->where('classificacao_id', $request->classificacao_id);
         }
 
-        if ($request->filled('empresa_id')) {
+        if ($request->filled('empresa_id') && !$empresaLogadaId) {
             $query->where('empresa_id', $request->empresa_id);
         }
 
@@ -44,7 +52,9 @@ class ResiduoController extends Controller
 
         $residuos = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
         $classificacoes = ClassificacaoResiduo::orderBy('nome')->get();
-        $empresas = Empresa::orderBy('nome')->get();
+        $empresas = $empresaLogadaId
+            ? Empresa::where('id', $empresaLogadaId)->orderBy('nome')->get()
+            : Empresa::orderBy('nome')->get();
 
         return view('painel.residuos.index', compact('residuos', 'classificacoes', 'empresas'));
     }
@@ -93,6 +103,8 @@ class ResiduoController extends Controller
                 ->with('swal_error', 'Resíduo não encontrado.');
         }
 
+        $this->abortarSeNaoForEmpresa($residuo->empresa_id);
+
         return view('painel.residuos.visualizar', compact('residuo'));
     }
 
@@ -105,6 +117,8 @@ class ResiduoController extends Controller
                 ->route('residuos.index')
                 ->with('swal_error', 'Resíduo não encontrado.');
         }
+
+        $this->abortarSeNaoForEmpresa($residuo->empresa_id);
 
         return view('painel.residuos.editar', array_merge(
             ['residuo' => $residuo],
@@ -121,6 +135,8 @@ class ResiduoController extends Controller
                 ->route('residuos.index')
                 ->with('swal_error', 'Resíduo não encontrado.');
         }
+
+        $this->abortarSeNaoForEmpresa($residuo->empresa_id);
 
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
 
@@ -159,6 +175,8 @@ class ResiduoController extends Controller
                 ->with('swal_error', 'Resíduo não encontrado.');
         }
 
+        $this->abortarSeNaoForEmpresa($residuo->empresa_id);
+
         try {
             $residuo->delete();
 
@@ -182,6 +200,8 @@ class ResiduoController extends Controller
                 'message' => 'Resíduo não encontrado.',
             ], 404);
         }
+
+        $this->abortarSeNaoForEmpresa($residuo->empresa_id);
 
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:disponivel,reservado,finalizado',
@@ -254,7 +274,9 @@ class ResiduoController extends Controller
     private function formOptions(): array
     {
         return [
-            'empresas' => Empresa::orderBy('nome')->get(),
+            'empresas' => $this->empresaLogadaId()
+                ? Empresa::where('id', $this->empresaLogadaId())->orderBy('nome')->get()
+                : Empresa::orderBy('nome')->get(),
             'classificacoes' => ClassificacaoResiduo::orderBy('nome')->get(),
             'unidades' => UnidadeMedida::orderBy('nome')->get(),
             'statusOptions' => $this->statusOptions(),
@@ -291,7 +313,9 @@ class ResiduoController extends Controller
     {
         unset($validated['mtr_arquivo'], $validated['licenca_ambiental_arquivo']);
 
-        if (empty($validated['empresa_id']) && Auth::check()) {
+        if ($this->empresaLogadaId()) {
+            $validated['empresa_id'] = $this->empresaLogadaId();
+        } elseif (empty($validated['empresa_id']) && Auth::check()) {
             $validated['empresa_id'] = Auth::user()->empresa_id;
         }
 

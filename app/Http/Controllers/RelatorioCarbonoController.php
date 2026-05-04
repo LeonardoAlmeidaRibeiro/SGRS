@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Transacao;
 use App\Services\CalculoCarbonoService;
+use App\Support\EmpresaScope;
 use Illuminate\Http\Request;
 
 class RelatorioCarbonoController extends Controller
 {
+    use EmpresaScope;
+
     public function index(Request $request, CalculoCarbonoService $calculoCarbonoService)
     {
         $query = Transacao::with(['residuo.unidade', 'empresaOrigem', 'empresaDestino'])
             ->where('status', '!=', 'cancelado');
+        $this->escopoTransacaoEmpresa($query);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

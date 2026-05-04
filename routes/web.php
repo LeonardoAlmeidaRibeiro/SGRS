@@ -7,6 +7,7 @@ use App\Http\Controllers\{
     ClassificacaoResiduoController,
     DashboardSustentavelController,
     DocumentoTransacaoController,
+    EmpresaController,
     ImpactoController,
     InteresseController,
     MarketplaceController,
@@ -30,24 +31,38 @@ Route::middleware('auth')->group(function () {
     Route::put('/painel/meu-perfil/empresa-legal', [PerfilController::class, 'updateEmpresaLegal'])->name('perfil.empresa-legal.update');
 });
 
-Route::get('/painel/unidades-medida', [UnidadeMedidaController::class, 'index'])->name('unidades-medida.index');
-Route::post('/painel/unidades-medida', [UnidadeMedidaController::class, 'store'])->name('unidades-medida.store');
-Route::put('/painel/unidades-medida/{id}', [UnidadeMedidaController::class, 'update'])->name('unidades-medida.update');
-Route::delete('/painel/unidades-medida/{id}', [UnidadeMedidaController::class, 'destroy'])->name('unidades-medida.destroy');
+Route::middleware(['auth', 'perfil:admin,auditor'])->group(function () {
+    Route::get('/painel/unidades-medida', [UnidadeMedidaController::class, 'index'])->name('unidades-medida.index');
+    Route::post('/painel/unidades-medida', [UnidadeMedidaController::class, 'store'])->name('unidades-medida.store');
+    Route::put('/painel/unidades-medida/{id}', [UnidadeMedidaController::class, 'update'])->name('unidades-medida.update');
+    Route::delete('/painel/unidades-medida/{id}', [UnidadeMedidaController::class, 'destroy'])->name('unidades-medida.destroy');
 
-Route::get('/painel/classificacoes-residuo', [ClassificacaoResiduoController::class, 'index'])->name('classificacoes-residuo.index');
-Route::post('/painel/classificacoes-residuo', [ClassificacaoResiduoController::class, 'store'])->name('classificacoes-residuo.store');
-Route::put('/painel/classificacoes-residuo/{id}', [ClassificacaoResiduoController::class, 'update'])->name('classificacoes-residuo.update');
-Route::delete('/painel/classificacoes-residuo/{id}', [ClassificacaoResiduoController::class, 'destroy'])->name('classificacoes-residuo.destroy');
+    Route::get('/painel/classificacoes-residuo', [ClassificacaoResiduoController::class, 'index'])->name('classificacoes-residuo.index');
+    Route::post('/painel/classificacoes-residuo', [ClassificacaoResiduoController::class, 'store'])->name('classificacoes-residuo.store');
+    Route::put('/painel/classificacoes-residuo/{id}', [ClassificacaoResiduoController::class, 'update'])->name('classificacoes-residuo.update');
+    Route::delete('/painel/classificacoes-residuo/{id}', [ClassificacaoResiduoController::class, 'destroy'])->name('classificacoes-residuo.destroy');
+});
 
 Route::middleware('auth')->group(function () {
-    Route::get('/painel/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
-    Route::get('/painel/marketplace/{id}', [MarketplaceController::class, 'show'])->name('marketplace.show');
-    Route::post('/painel/marketplace/{id}/reservar', [MarketplaceController::class, 'reservar'])->name('marketplace.reservar');
+    Route::get('/painel/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index')->middleware('perfil:admin,operador,comprador,auditor');
+    Route::get('/painel/marketplace/{id}', [MarketplaceController::class, 'show'])->name('marketplace.show')->middleware('perfil:admin,operador,comprador,auditor');
+    Route::post('/painel/marketplace/{id}/reservar', [MarketplaceController::class, 'reservar'])->name('marketplace.reservar')->middleware('perfil:admin,comprador');
     Route::get('/painel/dashboard-sustentavel', [DashboardSustentavelController::class, 'index'])->name('dashboard-sustentavel.index');
     Route::get('/painel/relatorio-carbono', [RelatorioCarbonoController::class, 'index'])->name('relatorio-carbono.index');
 
-    Route::get('/painel/interesses', [InteresseController::class, 'index'])->name('interesses.index');
+    Route::middleware('perfil:admin,auditor')->group(function () {
+        Route::get('/painel/empresas', [EmpresaController::class, 'index'])->name('empresas.index');
+        Route::get('/painel/empresas/criar', [EmpresaController::class, 'create'])->name('empresas.create');
+        Route::post('/painel/empresas', [EmpresaController::class, 'store'])->name('empresas.store');
+        Route::get('/painel/empresas/{empresa}', [EmpresaController::class, 'show'])->name('empresas.show');
+        Route::get('/painel/empresas/{empresa}/editar', [EmpresaController::class, 'edit'])->name('empresas.edit');
+        Route::put('/painel/empresas/{empresa}', [EmpresaController::class, 'update'])->name('empresas.update');
+        Route::delete('/painel/empresas/{empresa}', [EmpresaController::class, 'destroy'])->name('empresas.destroy');
+        Route::post('/painel/empresas/{empresa}/funcionarios', [EmpresaController::class, 'storeFuncionario'])->name('empresas.funcionarios.store');
+        Route::delete('/painel/empresas/{empresa}/funcionarios/{usuario}', [EmpresaController::class, 'destroyFuncionario'])->name('empresas.funcionarios.destroy');
+    });
+
+    Route::get('/painel/interesses', [InteresseController::class, 'index'])->name('interesses.index')->middleware('perfil:admin,comprador,operador');
     Route::get('/painel/interesses/criar', [InteresseController::class, 'create'])->name('interesses.create');
     Route::post('/painel/interesses', [InteresseController::class, 'store'])->name('interesses.store');
     Route::get('/painel/interesses/{interesse}', [InteresseController::class, 'show'])->name('interesses.show');
@@ -63,13 +78,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/painel/transacoes/{transacao}', [TransacaoController::class, 'update'])->name('transacoes.update');
     Route::delete('/painel/transacoes/{transacao}', [TransacaoController::class, 'destroy'])->name('transacoes.destroy');
 
-    Route::get('/painel/documentos-transacao', [DocumentoTransacaoController::class, 'index'])->name('documentos-transacao.index');
-    Route::get('/painel/documentos-transacao/criar', [DocumentoTransacaoController::class, 'create'])->name('documentos-transacao.create');
-    Route::post('/painel/documentos-transacao', [DocumentoTransacaoController::class, 'store'])->name('documentos-transacao.store');
+    Route::get('/painel/documentos-transacao', [DocumentoTransacaoController::class, 'index'])->name('documentos-transacao.index')->middleware('perfil:admin,auditor,operador');
+    Route::get('/painel/documentos-transacao/criar', [DocumentoTransacaoController::class, 'create'])->name('documentos-transacao.create')->middleware('perfil:admin,auditor');
+    Route::post('/painel/documentos-transacao', [DocumentoTransacaoController::class, 'store'])->name('documentos-transacao.store')->middleware('perfil:admin,auditor');
     Route::get('/painel/documentos-transacao/{documentoTransacao}', [DocumentoTransacaoController::class, 'show'])->name('documentos-transacao.show');
-    Route::get('/painel/documentos-transacao/{documentoTransacao}/editar', [DocumentoTransacaoController::class, 'edit'])->name('documentos-transacao.edit');
-    Route::put('/painel/documentos-transacao/{documentoTransacao}', [DocumentoTransacaoController::class, 'update'])->name('documentos-transacao.update');
-    Route::delete('/painel/documentos-transacao/{documentoTransacao}', [DocumentoTransacaoController::class, 'destroy'])->name('documentos-transacao.destroy');
+    Route::get('/painel/documentos-transacao/{documentoTransacao}/editar', [DocumentoTransacaoController::class, 'edit'])->name('documentos-transacao.edit')->middleware('perfil:admin,auditor');
+    Route::put('/painel/documentos-transacao/{documentoTransacao}', [DocumentoTransacaoController::class, 'update'])->name('documentos-transacao.update')->middleware('perfil:admin,auditor');
+    Route::delete('/painel/documentos-transacao/{documentoTransacao}', [DocumentoTransacaoController::class, 'destroy'])->name('documentos-transacao.destroy')->middleware('perfil:admin,auditor');
 
     Route::get('/painel/impactos', [ImpactoController::class, 'index'])->name('impactos.index');
     Route::get('/painel/impactos/criar', [ImpactoController::class, 'create'])->name('impactos.create');
@@ -86,15 +101,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/painel/avaliacoes/{avaliacao}', [AvaliacaoController::class, 'destroy'])->name('avaliacoes.destroy');
 
     Route::get('/painel/residuos', [ResiduoController::class, 'index'])->name('residuos.index');
-    Route::get('/painel/residuos/criar', [ResiduoController::class, 'create'])->name('residuos.create');
-    Route::post('/painel/residuos', [ResiduoController::class, 'store'])->name('residuos.store');
+    Route::get('/painel/residuos/criar', [ResiduoController::class, 'create'])->name('residuos.create')->middleware('perfil:admin,operador');
+    Route::post('/painel/residuos', [ResiduoController::class, 'store'])->name('residuos.store')->middleware('perfil:admin,operador');
     Route::get('/painel/residuos/localizacao/buscar', [ResiduoController::class, 'getByLocation'])->name('residuos.getByLocation');
     Route::get('/painel/estatisticas/residuos', [ResiduoController::class, 'getStatistics'])->name('residuos.statistics');
     Route::get('/painel/residuos/{id}', [ResiduoController::class, 'show'])->name('residuos.show');
-    Route::get('/painel/residuos/{id}/editar', [ResiduoController::class, 'edit'])->name('residuos.edit');
-    Route::put('/painel/residuos/{id}', [ResiduoController::class, 'update'])->name('residuos.update');
-    Route::delete('/painel/residuos/{id}', [ResiduoController::class, 'destroy'])->name('residuos.destroy');
-    Route::patch('/painel/residuos/{id}/status', [ResiduoController::class, 'updateStatus'])->name('residuos.updateStatus');
+    Route::get('/painel/residuos/{id}/editar', [ResiduoController::class, 'edit'])->name('residuos.edit')->middleware('perfil:admin,operador');
+    Route::put('/painel/residuos/{id}', [ResiduoController::class, 'update'])->name('residuos.update')->middleware('perfil:admin,operador');
+    Route::delete('/painel/residuos/{id}', [ResiduoController::class, 'destroy'])->name('residuos.destroy')->middleware('perfil:admin,operador');
+    Route::patch('/painel/residuos/{id}/status', [ResiduoController::class, 'updateStatus'])->name('residuos.updateStatus')->middleware('perfil:admin,operador,auditor');
 });
 
 Route::get('/painel/home', function () {

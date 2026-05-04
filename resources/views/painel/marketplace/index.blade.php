@@ -79,6 +79,13 @@
                                 <button type="submit" class="btn btn-primary me-2">Filtrar</button>
                                 <a href="{{ route('marketplace.index') }}" class="btn btn-light">Limpar</a>
                             </div>
+
+                            <div class="col-md-3 mb-4 d-flex align-items-end">
+                                <div class="form-check form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" name="somente_reputadas" value="1" id="somente_reputadas" @checked(request()->boolean('somente_reputadas'))>
+                                    <label class="form-check-label" for="somente_reputadas">Somente empresas bem avaliadas</label>
+                                </div>
+                            </div>
                         </div>
                     </form>
 
@@ -112,10 +119,17 @@
                                         <div class="mt-auto d-flex justify-content-end">
                                             <a href="{{ route('marketplace.show', $residuo->id) }}" class="btn btn-sm btn-light-info me-2">Ver detalhes</a>
 
-                                            <form method="POST" action="{{ route('marketplace.reservar', $residuo->id) }}" class="form-reservar">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-primary">Tenho interesse</button>
-                                            </form>
+                                            @php
+                                                $bloqueadoPerigoso = optional($residuo->classificacao)->eh_perigoso && $empresaLogada && !$empresaLogada->podeReceberResiduoPerigoso();
+                                            @endphp
+                                            @if($bloqueadoPerigoso)
+                                                <button type="button" class="btn btn-sm btn-light-danger" disabled>Licenca exigida</button>
+                                            @else
+                                                <form method="POST" action="{{ route('marketplace.reservar', $residuo->id) }}" class="form-reservar">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-primary">Tenho interesse</button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

@@ -60,4 +60,11 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Empresa::class);
     }
+
+    public function temPerfil($perfis): bool
+    {
+        $perfis = is_array($perfis) ? $perfis : func_get_args();
+
+        return in_array($this->perfil, $perfis, true);
+    }
 }

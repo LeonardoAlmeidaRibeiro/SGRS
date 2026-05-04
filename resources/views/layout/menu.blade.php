@@ -65,6 +65,17 @@
                     </a>
                 </div>
 
+                @if(Auth::user()->temPerfil(['admin', 'auditor']))
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('empresas.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-building fs-2"></i>
+                        </span>
+                        <span class="menu-title">Empresas</span>
+                    </a>
+                </div>
+                @endif
+
                 <div class="menu-item">
                     <a class="menu-link" href="{{ route('residuos.index') }}">
                         <span class="menu-icon">

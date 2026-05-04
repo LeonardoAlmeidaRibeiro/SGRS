@@ -6,14 +6,24 @@ use App\Models\Avaliacao;
 use App\Models\Empresa;
 use App\Models\Transacao;
 use App\Services\ReputacaoEmpresaService;
+use App\Support\EmpresaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class AvaliacaoController extends Controller
 {
+    use EmpresaScope;
+
     public function index()
     {
-        $avaliacoes = Avaliacao::with(['transacao.residuo', 'empresaAvaliadora', 'empresaAvaliada'])->latest()->paginate(15);
+        $query = Avaliacao::with(['transacao.residuo', 'empresaAvaliadora', 'empresaAvaliada']);
+        if ($this->empresaLogadaId()) {
+            $query->where(function ($q) {
+                $q->where('empresa_avaliadora_id', $this->empresaLogadaId())
+                    ->orWhere('empresa_avaliada_id', $this->empresaLogadaId());
+            });
+        }
+        $avaliacoes = $query->latest()->paginate(15);
 
         return view('painel.avaliacoes.index', compact('avaliacoes'));
     }
@@ -30,7 +40,13 @@ class AvaliacaoController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $avaliacao = Avaliacao::create($this->data($request, $validator->validated()));
+        $dados = $this->data($request, $validator->validated());
+        $bloqueio = $this->validarAvaliacao($dados);
+        if ($bloqueio) {
+            return back()->withInput()->with('swal_error', $bloqueio);
+        }
+
+        $avaliacao = Avaliacao::create($dados);
         $reputacaoService->recalcular($avaliacao->empresaAvaliada);
 
         return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliacao cadastrada com sucesso!');
@@ -38,18 +54,28 @@ class AvaliacaoController extends Controller
 
     public function edit(Avaliacao $avaliacao)
     {
+        $this->autorizarAvaliacao($avaliacao);
+
         return view('painel.avaliacoes.form', array_merge($this->options(), compact('avaliacao')));
     }
 
     public function update(Request $request, Avaliacao $avaliacao, ReputacaoEmpresaService $reputacaoService)
     {
+        $this->autorizarAvaliacao($avaliacao);
+
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
+        $dados = $this->data($request, $validator->validated());
+        $bloqueio = $this->validarAvaliacao($dados);
+        if ($bloqueio) {
+            return back()->withInput()->with('swal_error', $bloqueio);
+        }
+
         $empresaAnterior = $avaliacao->empresaAvaliada;
-        $avaliacao->update($this->data($request, $validator->validated()));
+        $avaliacao->update($dados);
         $reputacaoService->recalcular($avaliacao->empresaAvaliada);
 
         if ($empresaAnterior && (int) $empresaAnterior->id !== (int) $avaliacao->empresa_avaliada_id) {
@@ -61,6 +87,8 @@ class AvaliacaoController extends Controller
 
     public function destroy(Avaliacao $avaliacao, ReputacaoEmpresaService $reputacaoService)
     {
+        $this->autorizarAvaliacao($avaliacao);
+
         $empresa = $avaliacao->empresaAvaliada;
         $avaliacao->delete();
 
@@ -74,8 +102,8 @@ class AvaliacaoController extends Controller
     private function options(): array
     {
         return [
-            'transacoes' => Transacao::with('residuo')->latest()->get(),
-            'empresas' => Empresa::orderBy('nome')->get(),
+            'transacoes' => $this->escopoTransacaoEmpresa(Transacao::with('residuo'))->latest()->get(),
+            'empresas' => $this->empresasRelacionadas(),
         ];
     }
 
@@ -97,7 +125,52 @@ class AvaliacaoController extends Controller
             ? $request->boolean('residuo_conforme')
             : null;
 
+        if ($this->empresaLogadaId()) {
+            $validated['empresa_avaliadora_id'] = $this->empresaLogadaId();
+        }
+
         return $validated;
+    }
+
+    private function validarAvaliacao(array $dados): ?string
+    {
+        $transacao = Transacao::find($dados['transacao_id']);
+        if (!$transacao) {
+            return 'Informe uma transacao valida.';
+        }
+
+        $empresaId = $this->empresaLogadaId();
+        if ($empresaId && !in_array((int) $empresaId, [
+            (int) $transacao->empresa_origem_id,
+            (int) $transacao->empresa_destino_id,
+        ], true)) {
+            return 'A avaliacao precisa estar vinculada a uma transacao da empresa logada.';
+        }
+
+        if (!in_array((int) $dados['empresa_avaliada_id'], [
+            (int) $transacao->empresa_origem_id,
+            (int) $transacao->empresa_destino_id,
+        ], true)) {
+            return 'A empresa avaliada precisa fazer parte da transacao.';
+        }
+
+        return null;
+    }
+
+    private function empresasRelacionadas()
+    {
+        if (!$this->empresaLogadaId()) {
+            return Empresa::orderBy('nome')->get();
+        }
+
+        $transacoes = $this->escopoTransacaoEmpresa(Transacao::query())->get(['empresa_origem_id', 'empresa_destino_id']);
+        $ids = $transacoes->pluck('empresa_origem_id')
+            ->merge($transacoes->pluck('empresa_destino_id'))
+            ->push($this->empresaLogadaId())
+            ->unique()
+            ->values();
+
+        return Empresa::whereIn('id', $ids)->orderBy('nome')->get();
     }
 
     private function messages(): array
@@ -107,5 +180,21 @@ class AvaliacaoController extends Controller
             '*.exists' => 'Informe um registro valido.',
             'nota.between' => 'A nota deve ser de 1 a 5.',
         ];
+    }
+
+    private function autorizarAvaliacao(Avaliacao $avaliacao): void
+    {
+        $empresaId = $this->empresaLogadaId();
+
+        if (!$empresaId) {
+            return;
+        }
+
+        if (!in_array((int) $empresaId, [
+            (int) $avaliacao->empresa_avaliadora_id,
+            (int) $avaliacao->empresa_avaliada_id,
+        ], true)) {
+            abort(403, 'Avaliacao nao pertence a empresa logada.');
+        }
     }
 }

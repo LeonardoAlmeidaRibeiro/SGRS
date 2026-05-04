@@ -78,10 +78,17 @@
 
                             <div class="d-flex justify-content-end">
                                 <a href="{{ route('marketplace.index') }}" class="btn btn-light me-2">Voltar</a>
-                                <form method="POST" action="{{ route('marketplace.reservar', $residuo->id) }}" class="form-reservar">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary">Tenho interesse</button>
-                                </form>
+                                @php
+                                    $bloqueadoPerigoso = optional($residuo->classificacao)->eh_perigoso && $empresaLogada && !$empresaLogada->podeReceberResiduoPerigoso();
+                                @endphp
+                                @if($bloqueadoPerigoso)
+                                    <button type="button" class="btn btn-light-danger" disabled>Licenca especifica exigida</button>
+                                @else
+                                    <form method="POST" action="{{ route('marketplace.reservar', $residuo->id) }}" class="form-reservar">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary">Tenho interesse</button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>
