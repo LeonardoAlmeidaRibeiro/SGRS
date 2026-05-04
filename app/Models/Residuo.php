@@ -13,6 +13,7 @@ class Residuo extends Model
         'classificacao_id',
         'tipo_material',
         'descricao',
+        'imagem',
         'quantidade',
         'unidade_id',
         'status',
@@ -21,6 +22,12 @@ class Residuo extends Model
         'estado',
         'latitude',
         'longitude',
+    ];
+
+    protected $casts = [
+        'quantidade' => 'decimal:3',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
     ];
 
     /*
@@ -48,6 +55,10 @@ class Residuo extends Model
 
     public function getQuantidadeEmKgAttribute()
     {
+        if (!$this->unidade) {
+            return null;
+        }
+
         return $this->quantidade * $this->unidade->fator_conversao_para_kg;
     }
 }

@@ -65,6 +65,24 @@
                     </a>
                 </div>
 
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('residuos.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-recycle fs-2"></i>
+                        </span>
+                        <span class="menu-title">Resíduos</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('marketplace.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-store fs-2"></i>
+                        </span>
+                        <span class="menu-title">Marketplace</span>
+                    </a>
+                </div>
+
 
 
 
