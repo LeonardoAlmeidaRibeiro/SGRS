@@ -13,6 +13,10 @@ class UnidadeMedida extends Model
         'fator_conversao_para_kg',
     ];
 
+    protected $casts = [
+        'fator_conversao_para_kg' => 'decimal:4',
+    ];
+
     public function residuos()
     {
         return $this->hasMany(Residuo::class, 'unidade_id');

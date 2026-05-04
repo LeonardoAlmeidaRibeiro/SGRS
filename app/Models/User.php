@@ -19,6 +19,16 @@ class User extends Authenticatable
         'empresa_id',
         'name',
         'email',
+        'telefone',
+        'cpf',
+        'data_nascimento',
+        'cep',
+        'endereco',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'estado',
         'password',
         'perfil',
     ];
@@ -38,6 +48,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'data_nascimento' => 'date',
             'password' => 'hashed',
         ];
     }

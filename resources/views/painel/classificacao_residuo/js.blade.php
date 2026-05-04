@@ -47,9 +47,14 @@
         var exige_cadri = $("#exige_cadri_edit").is(":checked") ? 1 : 0;
 
         $.ajax({
-            url: "{{ route('classificacoes-residuo.update', '') }}/"+id,
+            url: "{{ url('/painel/classificacoes-residuo') }}/" + id,
             type: "PUT",
-            data:  "&nome=" + nome +"&codigo=" + codigo +"&exige_mtr=" + exige_mtr+"&exige_cadri=" + exige_cadri,
+            data: {
+                nome: nome,
+                codigo: codigo,
+                exige_mtr: exige_mtr,
+                exige_cadri: exige_cadri
+            },
             headers: headers,
             error: function(data) {
 
@@ -140,7 +145,13 @@
         $.ajax({
             url: "{{ route('classificacoes-residuo.store') }}",
             type: "POST",
-            data:  "&nome=" + nome +"&codigo=" + codigo +"&exige_mtr=" + exige_mtr+"&exige_cadri=" + exige_cadri,
+            data: {
+                nome: nome,
+                codigo: codigo,
+                exige_mtr: exige_mtr,
+                exige_cadri: exige_cadri
+            },
+            headers: headers,
             error: function(data) {
                 if (data.status === 422) {
                     var message = '';
@@ -256,7 +267,7 @@
             if (typeof(result.value) != "undefined" && result.value == true) { // Se foi apertado o botão de "Sim, excluir"
 
                 $.ajax({
-                    url: "{{ route('classificacoes-residuo.destroy', '') }}/"+id,
+                    url: "{{ url('/painel/classificacoes-residuo') }}/" + id,
                     type: "DELETE",
                     headers: headers,
                     success: function(data) {

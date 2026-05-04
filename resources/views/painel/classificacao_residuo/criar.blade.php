@@ -52,8 +52,8 @@
                             <span>Exige MTR</span>
                         </label>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="exige_mtr" id="exige_mtr" value="1" id="exige_mtr_cadastro">
-                            <label class="form-check-label" for="exige_mtr_cadastro">
+                            <input class="form-check-input" type="checkbox" name="exige_mtr" id="exige_mtr" value="1">
+                            <label class="form-check-label" for="exige_mtr">
                                 Manifesto de Transporte de Resíduos
                             </label>
                         </div>
@@ -67,8 +67,8 @@
                             <span>Exige CADRI</span>
                         </label>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="exige_cadri" id="exige_cadri" value="1" id="exige_cadri_cadastro">
-                            <label class="form-check-label" for="exige_cadri_cadastro">
+                            <input class="form-check-input" type="checkbox" name="exige_cadri" id="exige_cadri" value="1">
+                            <label class="form-check-label" for="exige_cadri">
                                 Cadastro de Resíduos Industriais
                             </label>
                         </div>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     LoginController,
     ClassificacaoResiduoController,
+    PerfilController,
     UnidadeMedidaController,
     ResiduoController
 };
@@ -14,17 +15,21 @@ Route::post('/cadastro-empresa', [LoginController::class, 'store'])->name('empre
 Route::post('/login', [LoginController::class, 'access'])->name('painel.access'); 
 Route::post('/logout', [LoginController::class, 'logout'])->name('painel.logout');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/painel/meu-perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
+    Route::put('/painel/meu-perfil/dados-pessoais', [PerfilController::class, 'updateDadosPessoais'])->name('perfil.dados-pessoais.update');
+    Route::put('/painel/meu-perfil/endereco', [PerfilController::class, 'updateEndereco'])->name('perfil.endereco.update');
+});
+
 Route::get('/painel/unidades-medida', [UnidadeMedidaController::class, 'index'])->name('unidades-medida.index');
 Route::post('/painel/unidades-medida', [UnidadeMedidaController::class, 'store'])->name('unidades-medida.store');
-Route::put('/painel/unidades-medida/{id?}', [UnidadeMedidaController::class, 'update'])->name('unidades-medida.update');
-Route::delete('/painel/unidades-medida/{id?}', [UnidadeMedidaController::class, 'destroy'])->name('unidades-medida.destroy');
+Route::put('/painel/unidades-medida/{id}', [UnidadeMedidaController::class, 'update'])->name('unidades-medida.update');
+Route::delete('/painel/unidades-medida/{id}', [UnidadeMedidaController::class, 'destroy'])->name('unidades-medida.destroy');
 
 Route::get('/painel/classificacoes-residuo', [ClassificacaoResiduoController::class, 'index'])->name('classificacoes-residuo.index');
 Route::post('/painel/classificacoes-residuo', [ClassificacaoResiduoController::class, 'store'])->name('classificacoes-residuo.store');
-Route::put('/painel/classificacoes-residuo/{id?}', [ClassificacaoResiduoController::class, 'update'])->name('classificacoes-residuo.update');
-Route::delete('/painel/classificacoes-residuo/{id?}', [ClassificacaoResiduoController::class, 'destroy'])->name('classificacoes-residuo.destroy');
-
-
+Route::put('/painel/classificacoes-residuo/{id}', [ClassificacaoResiduoController::class, 'update'])->name('classificacoes-residuo.update');
+Route::delete('/painel/classificacoes-residuo/{id}', [ClassificacaoResiduoController::class, 'destroy'])->name('classificacoes-residuo.destroy');
 
 Route::get('/painel/residuos', [ResiduoController::class, 'index'])->name('residuos.index');
 Route::post('/painel/residuos', [ResiduoController::class, 'store'])->name('residuos.store');

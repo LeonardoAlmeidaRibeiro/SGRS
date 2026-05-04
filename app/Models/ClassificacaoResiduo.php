@@ -16,6 +16,11 @@ class ClassificacaoResiduo extends Model
         'exige_cadri',
     ];
 
+    protected $casts = [
+        'exige_mtr' => 'boolean',
+        'exige_cadri' => 'boolean',
+    ];
+
     public function residuos()
     {
         return $this->hasMany(Residuo::class, 'classificacao_id');

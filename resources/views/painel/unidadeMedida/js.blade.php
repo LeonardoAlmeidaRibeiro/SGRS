@@ -38,9 +38,12 @@
         var fator_conversao_para_kg = $("#fator_conversao_para_kg_edit").val();
 
         $.ajax({
-            url: "{{ route('unidades-medida.update', '') }}/"+id,
+            url: "{{ url('/painel/unidades-medida') }}/" + id,
             type: "PUT",
-            data: "&nome=" + nome +"&fator_conversao_para_kg=" + fator_conversao_para_kg+"&id=" + id,
+            data: {
+                nome: nome,
+                fator_conversao_para_kg: fator_conversao_para_kg
+            },
             headers: headers,
             error: function(data) {
 
@@ -107,7 +110,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: 'Preencha o campo Público Alvo'
+                text: 'Preencha o campo Nome'
             });
             return false;
         }
@@ -116,7 +119,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: 'Preencha o campo Público Alvo'
+                text: 'Preencha o campo Fator de Conversao'
             });
             return false;
         }
@@ -124,7 +127,10 @@
         $.ajax({
             url: "{{ route('unidades-medida.store') }}",
             type: "POST",
-            data: "&nome=" + nome +"&fator_conversao_para_kg=" + fator_conversao_para_kg,
+            data: {
+                nome: nome,
+                fator_conversao_para_kg: fator_conversao_para_kg
+            },
             headers: headers,
             error: function(data) {
 
@@ -196,7 +202,7 @@
                         '</td>' +
                         '</tr>';
 
-                    $("#tabela").prepend(novoRegistro);
+                    $("#tabela tbody").prepend(novoRegistro);
 
                     Swal.fire({
                         icon: 'success',
@@ -237,7 +243,7 @@
             if(typeof(result.value) != "undefined" && result.value == true){ // Se foi apertado o botão de "Sim, excluir"
 
                 $.ajax({
-                    url: "{{ route('unidades-medida.destroy', '') }}/"+id,
+                    url: "{{ url('/painel/unidades-medida') }}/" + id,
                     type: "DELETE",
                     headers: headers,
                     success: function(data) {
