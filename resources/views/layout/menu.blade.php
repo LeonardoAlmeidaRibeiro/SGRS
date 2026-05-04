@@ -19,17 +19,13 @@
                 <div class="d-flex">
                     <!--begin::Info-->
                     <div class="flex-grow-1 me-2 text-gray-300 ">
-                            @if (Session::has('usuario'))
-                                @php
-                                    $dados_usuario = Session::get('usuario');
-                                @endphp
-                                <b>{{ $dados_usuario['nome'] }}</b>
-                            @endif
-                        <span class="text-gray-600 fw-bold d-block fs-8 mb-1">
-                            @if (Session::has('usuario'))
-                                Bem vindo ao SGE!
-                            @endif
-                        </span>
+                        @auth
+                            <b>{{ Auth::user()->name }}</b>
+                            <span class="text-gray-600 fw-bold d-block fs-8 mb-1">
+                                {{ optional(Auth::user()->empresa)->nome ?: 'Sem empresa vinculada' }}
+                            </span>
+                            <span class="badge badge-light-primary fs-8">{{ ucfirst(Auth::user()->perfil) }}</span>
+                        @endauth
                     </div>
                     <!--end::Info-->
                     

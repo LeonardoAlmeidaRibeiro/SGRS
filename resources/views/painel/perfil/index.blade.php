@@ -2,6 +2,7 @@
 
 @php
     $tabAtiva = session('perfil_tab', 'dados');
+    $empresaUsuario = optional($usuario)->empresa;
 @endphp
 
 <div id="kt_content" class="content d-flex flex-column flex-column-fluid">
@@ -17,6 +18,57 @@
                 </div>
 
                 <div class="card-body">
+                    <div class="row mb-8">
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Nome</div>
+                            <div class="fs-5 fw-bolder">{{ $usuario->name }}</div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">E-mail</div>
+                            <div class="fs-5">{{ $usuario->email }}</div>
+                        </div>
+
+                        <div class="col-md-2 mb-5">
+                            <div class="text-muted fw-bold">Perfil</div>
+                            <div class="fs-5">{{ ucfirst($usuario->perfil) }}</div>
+                        </div>
+
+                        <div class="col-md-4 mb-5">
+                            <div class="text-muted fw-bold">Empresa vinculada</div>
+                            <div class="fs-5">
+                                @if($empresaUsuario)
+                                    {{ $empresaUsuario->nome }}
+                                    <a href="{{ route('empresas.show', $empresaUsuario->id) }}" class="btn btn-sm btn-light-info ms-2">Ver empresa</a>
+                                @else
+                                    -
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Telefone</div>
+                            <div class="fs-5">{{ $usuario->telefone ?: '-' }}</div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">CPF</div>
+                            <div class="fs-5">{{ $usuario->cpf ?: '-' }}</div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Nascimento</div>
+                            <div class="fs-5">{{ optional($usuario->data_nascimento)->format('d/m/Y') ?: '-' }}</div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Localizacao</div>
+                            <div class="fs-5">{{ $usuario->cidade ? $usuario->cidade . '/' . $usuario->estado : '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="separator separator-dashed mb-8"></div>
+
                     <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6">
                         <li class="nav-item">
                             <a class="nav-link {{ $tabAtiva === 'dados' ? 'active' : '' }}" data-bs-toggle="tab" href="#tab_dados_pessoais">

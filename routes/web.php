@@ -23,6 +23,9 @@ Route::get('/cadastro', [LoginController::class, 'cadastro'])->name('painel.cada
 Route::post('/cadastro-empresa', [LoginController::class, 'store'])->name('empresa.store');
 Route::post('/login', [LoginController::class, 'access'])->name('painel.access'); 
 Route::post('/logout', [LoginController::class, 'logout'])->name('painel.logout');
+Route::get('/marketplace', [MarketplaceController::class, 'publico'])->name('marketplace.publico.index');
+Route::post('/marketplace/{id}/interesse', [MarketplaceController::class, 'publicoReservar'])->name('marketplace.publico.reservar')->middleware('auth');
+Route::get('/marketplace/{id}', [MarketplaceController::class, 'publicoShow'])->name('marketplace.publico.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/painel/meu-perfil', [PerfilController::class, 'edit'])->name('perfil.edit');

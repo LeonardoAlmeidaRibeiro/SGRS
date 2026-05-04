@@ -14,6 +14,106 @@ use Illuminate\Support\Facades\DB;
 
 class MarketplaceController extends Controller
 {
+    public function publico(Request $request)
+    {
+        $query = $this->queryPublica($request);
+
+        $residuos = $query->orderBy('residuos.created_at', 'desc')->paginate(9)->withQueryString();
+        $classificacoes = ClassificacaoResiduo::orderBy('nome')->get();
+        $totalDisponivel = (clone $this->queryPublica(new Request()))->count();
+        $totalEmpresas = (clone $this->queryPublica(new Request()))->distinct('empresa_id')->count('empresa_id');
+        $totalEstados = (clone $this->queryPublica(new Request()))->distinct('estado')->count('estado');
+
+        return view('public.marketplace.index', compact('residuos', 'classificacoes', 'totalDisponivel', 'totalEmpresas', 'totalEstados'));
+    }
+
+    public function publicoShow($id)
+    {
+        $residuo = $this->queryPublica(new Request())->find($id);
+
+        if (!$residuo) {
+            return redirect()->route('marketplace.publico.index');
+        }
+
+        $relacionados = $this->queryPublica(new Request())
+            ->where('residuos.id', '!=', $residuo->id)
+            ->where('residuos.classificacao_id', $residuo->classificacao_id)
+            ->limit(3)
+            ->get();
+
+        return view('public.marketplace.show', compact('residuo', 'relacionados'));
+    }
+
+    public function publicoReservar($id, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService)
+    {
+        $residuo = Residuo::with(['classificacao', 'empresa'])
+            ->where('residuos.status', 'disponivel')
+            ->where('residuos.documentacao_validada', true)
+            ->find($id);
+
+        if (!$residuo) {
+            return redirect()
+                ->route('marketplace.publico.index')
+                ->with('swal_error', 'Este residuo nao esta mais disponivel.');
+        }
+
+        $empresaDestino = optional(Auth::user())->empresa;
+
+        if (!$empresaDestino) {
+            return redirect()
+                ->route('marketplace.publico.show', $residuo->id)
+                ->with('swal_error', 'Seu usuario precisa estar vinculado a uma empresa para registrar interesse.');
+        }
+
+        if ((int) $residuo->empresa_id === (int) Auth::user()->empresa_id) {
+            return redirect()
+                ->route('marketplace.publico.show', $residuo->id)
+                ->with('swal_error', 'Sua empresa ja e a responsavel por este residuo.');
+        }
+
+        if ($empresaDestino->restrita_por_reputacao || ((float) $empresaDestino->reputacao_media > 0 && (float) $empresaDestino->reputacao_media < 3)) {
+            return redirect()
+                ->route('marketplace.publico.show', $residuo->id)
+                ->with('swal_error', 'Sua empresa esta com restricao por reputacao baixa e nao pode reservar novos residuos no momento.');
+        }
+
+        if (optional($residuo->classificacao)->eh_perigoso && !$empresaDestino->podeReceberResiduoPerigoso()) {
+            return redirect()
+                ->route('marketplace.publico.show', $residuo->id)
+                ->with('swal_error', 'Residuo perigoso so pode ser transferido para empresas com licenca ambiental especifica valida.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $dadosTransacao = $rastreabilidadeService->prepararTransacao([
+                'residuo_id' => $residuo->id,
+                'empresa_origem_id' => $residuo->empresa_id,
+                'empresa_destino_id' => $empresaDestino->id,
+                'status' => 'pendente',
+                'data_transacao' => now()->toDateString(),
+            ]);
+
+            $transacao = Transacao::create($dadosTransacao);
+
+            $residuo->update(['status' => 'reservado']);
+            $transacao->impacto()->create($impactoService->calcular($transacao));
+            $rastreabilidadeService->registrar($transacao, 'interesse_registrado', 'Empresa destino registrou interesse pelo residuo.', $residuo->mtr_url ?: $residuo->licenca_ambiental_url);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()
+                ->route('marketplace.publico.index')
+                ->with('swal_error', 'Erro ao registrar interesse: ' . $e->getMessage());
+        }
+
+        return redirect()
+            ->route('marketplace.publico.index')
+            ->with('swal_success', 'Interesse registrado com sucesso! Uma transacao pendente foi criada para continuidade da negociacao.');
+    }
+
     public function index(Request $request)
     {
         $query = Residuo::with(['empresa', 'classificacao', 'unidade'])
@@ -172,5 +272,40 @@ class MarketplaceController extends Controller
         return redirect()
             ->route('marketplace.index')
             ->with('swal_success', 'Interesse registrado com sucesso! Uma transação pendente foi criada para continuidade da negociação.');
+    }
+
+    private function queryPublica(Request $request)
+    {
+        $query = Residuo::with(['empresa', 'classificacao', 'unidade'])
+            ->where('residuos.status', 'disponivel')
+            ->where('residuos.documentacao_validada', true)
+            ->where(function ($docs) {
+                $docs->whereNotNull('residuos.mtr_url')
+                    ->orWhereNotNull('residuos.licenca_ambiental_url');
+            });
+
+        if ($request->filled('busca')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('residuos.tipo_material', 'like', '%' . $request->busca . '%')
+                    ->orWhere('residuos.descricao', 'like', '%' . $request->busca . '%')
+                    ->orWhereHas('empresa', function ($empresa) use ($request) {
+                        $empresa->where('nome', 'like', '%' . $request->busca . '%');
+                    });
+            });
+        }
+
+        if ($request->filled('classificacao_id')) {
+            $query->where('residuos.classificacao_id', $request->classificacao_id);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('residuos.estado', strtoupper($request->estado));
+        }
+
+        if ($request->filled('cidade')) {
+            $query->where('residuos.cidade', 'like', '%' . $request->cidade . '%');
+        }
+
+        return $query;
     }
 }
