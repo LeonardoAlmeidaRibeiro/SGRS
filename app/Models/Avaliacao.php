@@ -15,7 +15,12 @@ class Avaliacao extends Model
         'empresa_avaliadora_id',
         'empresa_avaliada_id',
         'nota',
+        'residuo_conforme',
         'comentario',
+    ];
+
+    protected $casts = [
+        'residuo_conforme' => 'boolean',
     ];
 
     public function transacao()

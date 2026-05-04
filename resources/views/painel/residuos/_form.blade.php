@@ -94,4 +94,58 @@
         <label class="fs-6 fw-bold form-label mb-2">Descrição</label>
         <textarea class="form-control form-control-solid" name="descricao" rows="4">{{ old('descricao', $residuo->descricao ?? '') }}</textarea>
     </div>
+    <div class="col-md-12 mb-4">
+        <div class="separator separator-dashed my-4"></div>
+        <h4 class="fw-bolder mb-1">Validacao legal e logistica</h4>
+        <div class="text-muted fs-7">Para o residuo aparecer no marketplace, anexe MTR ou licenca ambiental e conclua o checklist com assinatura digital.</div>
+    </div>
+
+    <div class="col-md-6 mb-7">
+        <label class="fs-6 fw-bold form-label mb-2">MTR</label>
+        <input type="file" class="form-control form-control-solid" name="mtr_arquivo" accept=".pdf,.jpg,.jpeg,.png">
+        @if($residuo && $residuo->mtr_url)
+            <a href="{{ $residuo->mtr_url }}" target="_blank" class="fs-7 mt-2 d-inline-block">Ver MTR anexado</a>
+        @endif
+    </div>
+
+    <div class="col-md-6 mb-7">
+        <label class="fs-6 fw-bold form-label mb-2">Licenca ambiental</label>
+        <input type="file" class="form-control form-control-solid" name="licenca_ambiental_arquivo" accept=".pdf,.jpg,.jpeg,.png">
+        @if($residuo && $residuo->licenca_ambiental_url)
+            <a href="{{ $residuo->licenca_ambiental_url }}" target="_blank" class="fs-7 mt-2 d-inline-block">Ver licenca anexada</a>
+        @endif
+    </div>
+
+    <div class="col-md-3 mb-7">
+        <div class="form-check form-check-custom form-check-solid">
+            <input class="form-check-input" type="checkbox" name="checklist_origem_preenchido" value="1" id="checklist_origem_preenchido" @checked(old('checklist_origem_preenchido', $residuo->checklist_origem_preenchido ?? false))>
+            <label class="form-check-label" for="checklist_origem_preenchido">Origem preenchida</label>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-7">
+        <div class="form-check form-check-custom form-check-solid">
+            <input class="form-check-input" type="checkbox" name="checklist_quantidade_confirmada" value="1" id="checklist_quantidade_confirmada" @checked(old('checklist_quantidade_confirmada', $residuo->checklist_quantidade_confirmada ?? false))>
+            <label class="form-check-label" for="checklist_quantidade_confirmada">Quantidade confirmada</label>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-7">
+        <div class="form-check form-check-custom form-check-solid">
+            <input class="form-check-input" type="checkbox" name="checklist_acondicionamento_confirmado" value="1" id="checklist_acondicionamento_confirmado" @checked(old('checklist_acondicionamento_confirmado', $residuo->checklist_acondicionamento_confirmado ?? false))>
+            <label class="form-check-label" for="checklist_acondicionamento_confirmado">Acondicionamento conferido</label>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-7">
+        <div class="form-check form-check-custom form-check-solid">
+            <input class="form-check-input" type="checkbox" name="checklist_documentos_conferidos" value="1" id="checklist_documentos_conferidos" @checked(old('checklist_documentos_conferidos', $residuo->checklist_documentos_conferidos ?? false))>
+            <label class="form-check-label" for="checklist_documentos_conferidos">Documentos conferidos</label>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-7">
+        <label class="fs-6 fw-bold form-label mb-2">Assinatura digital do responsavel</label>
+        <input type="text" class="form-control form-control-solid" name="assinatura_digital" value="{{ old('assinatura_digital', $residuo->assinatura_digital ?? '') }}" placeholder="Nome completo, CPF ou identificador digital">
+    </div>
 </div>

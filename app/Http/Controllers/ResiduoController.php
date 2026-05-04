@@ -9,6 +9,7 @@ use App\Models\UnidadeMedida;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ResiduoController extends Controller
@@ -66,7 +67,7 @@ class ResiduoController extends Controller
         try {
             DB::beginTransaction();
 
-            Residuo::create($this->data($validator->validated()));
+            Residuo::create($this->data($request, $validator->validated()));
 
             DB::commit();
 
@@ -132,7 +133,7 @@ class ResiduoController extends Controller
         try {
             DB::beginTransaction();
 
-            $residuo->update($this->data($validator->validated()));
+            $residuo->update($this->data($request, $validator->validated(), $residuo));
 
             DB::commit();
 
@@ -268,6 +269,13 @@ class ResiduoController extends Controller
             'tipo_material' => ['required', 'string', 'max:255'],
             'descricao' => ['nullable', 'string'],
             'imagem' => ['nullable', 'url', 'max:255'],
+            'mtr_arquivo' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'licenca_ambiental_arquivo' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'checklist_origem_preenchido' => ['nullable', 'boolean'],
+            'checklist_quantidade_confirmada' => ['nullable', 'boolean'],
+            'checklist_acondicionamento_confirmado' => ['nullable', 'boolean'],
+            'checklist_documentos_conferidos' => ['nullable', 'boolean'],
+            'assinatura_digital' => ['nullable', 'string', 'max:255'],
             'quantidade' => ['required', 'numeric', 'min:0'],
             'unidade_id' => ['required', 'exists:unidades_medida,id'],
             'status' => ['required', 'in:disponivel,reservado,finalizado'],
@@ -279,13 +287,53 @@ class ResiduoController extends Controller
         ];
     }
 
-    private function data(array $validated): array
+    private function data(Request $request, array $validated, ?Residuo $residuo = null): array
     {
+        unset($validated['mtr_arquivo'], $validated['licenca_ambiental_arquivo']);
+
         if (empty($validated['empresa_id']) && Auth::check()) {
             $validated['empresa_id'] = Auth::user()->empresa_id;
         }
 
         $validated['estado'] = strtoupper($validated['estado']);
+        $validated['checklist_origem_preenchido'] = $request->boolean('checklist_origem_preenchido');
+        $validated['checklist_quantidade_confirmada'] = $request->boolean('checklist_quantidade_confirmada');
+        $validated['checklist_acondicionamento_confirmado'] = $request->boolean('checklist_acondicionamento_confirmado');
+        $validated['checklist_documentos_conferidos'] = $request->boolean('checklist_documentos_conferidos');
+
+        if ($request->hasFile('mtr_arquivo')) {
+            $validated['mtr_url'] = Storage::url($request->file('mtr_arquivo')->store('documentos_residuos', 'public'));
+        } elseif ($residuo) {
+            $validated['mtr_url'] = $residuo->mtr_url;
+        }
+
+        if ($request->hasFile('licenca_ambiental_arquivo')) {
+            $validated['licenca_ambiental_url'] = Storage::url($request->file('licenca_ambiental_arquivo')->store('documentos_residuos', 'public'));
+        } elseif ($residuo) {
+            $validated['licenca_ambiental_url'] = $residuo->licenca_ambiental_url;
+        }
+
+        $classificacao = ClassificacaoResiduo::find($validated['classificacao_id']);
+        $temDocumento = !empty($validated['mtr_url']) || !empty($validated['licenca_ambiental_url']);
+        $checklistCompleto = $validated['checklist_origem_preenchido']
+            && $validated['checklist_quantidade_confirmada']
+            && $validated['checklist_acondicionamento_confirmado']
+            && $validated['checklist_documentos_conferidos']
+            && !empty($validated['assinatura_digital']);
+
+        if ($classificacao && $classificacao->exige_mtr && empty($validated['mtr_url'])) {
+            throw new \InvalidArgumentException('Esta classificacao exige upload do MTR antes da listagem.');
+        }
+
+        if ($validated['status'] === 'disponivel' && (!$temDocumento || !$checklistCompleto)) {
+            throw new \InvalidArgumentException('Para listar o residuo, anexe o MTR ou licenca ambiental e conclua o checklist com assinatura digital.');
+        }
+
+        $validated['documentacao_validada'] = $temDocumento && $checklistCompleto;
+        $validated['checklist_assinado_em'] = $checklistCompleto ? now() : null;
+        $validated['observacao_validacao'] = $validated['documentacao_validada']
+            ? 'Validacao automatica por checklist e documentacao anexada.'
+            : 'Documentacao pendente.';
 
         return $validated;
     }

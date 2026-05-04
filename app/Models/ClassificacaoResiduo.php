@@ -12,6 +12,8 @@ class ClassificacaoResiduo extends Model
     protected $fillable = [
         'nome',
         'codigo',
+        'classe_nbr10004',
+        'codigo_cer',
         'exige_mtr',
         'exige_cadri',
     ];
@@ -20,6 +22,11 @@ class ClassificacaoResiduo extends Model
         'exige_mtr' => 'boolean',
         'exige_cadri' => 'boolean',
     ];
+
+    public function getEhPerigosoAttribute()
+    {
+        return $this->classe_nbr10004 === 'perigoso';
+    }
 
     public function residuos()
     {

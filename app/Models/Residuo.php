@@ -14,6 +14,16 @@ class Residuo extends Model
         'tipo_material',
         'descricao',
         'imagem',
+        'mtr_url',
+        'licenca_ambiental_url',
+        'checklist_origem_preenchido',
+        'checklist_classificacao_confirmada',
+        'checklist_acondicionamento_confirmado',
+        'checklist_transporte_confirmado',
+        'assinatura_digital',
+        'checklist_assinado_em',
+        'documentacao_validada',
+        'observacao_validacao',
         'quantidade',
         'unidade_id',
         'status',
@@ -28,7 +38,20 @@ class Residuo extends Model
         'quantidade' => 'decimal:3',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
+        'checklist_origem_preenchido' => 'boolean',
+        'checklist_classificacao_confirmada' => 'boolean',
+        'checklist_acondicionamento_confirmado' => 'boolean',
+        'checklist_transporte_confirmado' => 'boolean',
+        'checklist_assinado_em' => 'datetime',
+        'documentacao_validada' => 'boolean',
     ];
+
+    public function getPodeSerListadoAttribute(): bool
+    {
+        return $this->status === 'disponivel'
+            && $this->documentacao_validada
+            && ($this->mtr_url || $this->licenca_ambiental_url);
+    }
 
     /*
      * RELACIONAMENTOS

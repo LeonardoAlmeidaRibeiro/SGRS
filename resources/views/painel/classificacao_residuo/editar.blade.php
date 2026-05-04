@@ -48,6 +48,23 @@
                     </div>
                     <!--end::Input group-->
 
+                    <div class="d-flex flex-column mb-7 fv-row">
+                        <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
+                            <span class="required">Classe NBR 10004</span>
+                        </label>
+                        <select class="form-select form-select-solid" name="classe_nbr10004_edit" id="classe_nbr10004_edit">
+                            <option value="nao_perigoso">Nao perigoso</option>
+                            <option value="perigoso">Perigoso</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex flex-column mb-7 fv-row">
+                        <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
+                            <span>Codigo CER</span>
+                        </label>
+                        <input type="text" class="form-control form-control-solid" id="codigo_cer_edit" name="codigo_cer_edit" />
+                    </div>
+
                     <!--begin::Input group - Exige MTR-->
                     <div class="d-flex flex-column mb-7 fv-row">
                         <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">

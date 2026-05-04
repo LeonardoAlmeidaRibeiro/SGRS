@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -70,6 +71,47 @@ class PerfilController extends Controller
             ->with('perfil_tab', 'endereco');
     }
 
+    public function updateEmpresaLegal(Request $request)
+    {
+        $empresa = optional(Auth::user())->empresa;
+
+        if (!$empresa) {
+            return back()
+                ->with('swal_error', 'Seu usuario nao esta vinculado a uma empresa.')
+                ->with('perfil_tab', 'empresa');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'possui_licenca_ambiental' => ['nullable', 'boolean'],
+            'licenca_residuos_perigosos' => ['nullable', 'boolean'],
+            'numero_licenca_ambiental' => ['nullable', 'string', 'max:100'],
+            'validade_licenca_ambiental' => ['nullable', 'date'],
+            'licenca_ambiental_arquivo' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ], $this->messages());
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator, 'empresaLegal')
+                ->withInput()
+                ->with('perfil_tab', 'empresa');
+        }
+
+        $dados = $validator->validated();
+        unset($dados['licenca_ambiental_arquivo']);
+        $dados['possui_licenca_ambiental'] = $request->boolean('possui_licenca_ambiental');
+        $dados['licenca_residuos_perigosos'] = $request->boolean('licenca_residuos_perigosos');
+
+        if ($request->hasFile('licenca_ambiental_arquivo')) {
+            $dados['licenca_ambiental_url'] = Storage::url($request->file('licenca_ambiental_arquivo')->store('licencas_empresas', 'public'));
+        }
+
+        $empresa->update($dados);
+
+        return back()
+            ->with('swal_success', 'Dados legais da empresa atualizados com sucesso!')
+            ->with('perfil_tab', 'empresa');
+    }
+
     private function messages(): array
     {
         return [
@@ -88,6 +130,11 @@ class PerfilController extends Controller
             'bairro.max' => 'O bairro deve ter no máximo 100 caracteres.',
             'cidade.max' => 'A cidade deve ter no máximo 100 caracteres.',
             'estado.size' => 'O estado deve ter 2 letras.',
+            'numero_licenca_ambiental.max' => 'O numero da licenca deve ter no maximo 100 caracteres.',
+            'validade_licenca_ambiental.date' => 'Informe uma validade de licenca valida.',
+            'licenca_ambiental_arquivo.file' => 'Anexe uma licenca ambiental valida.',
+            'licenca_ambiental_arquivo.mimes' => 'A licenca ambiental deve ser PDF, JPG ou PNG.',
+            'licenca_ambiental_arquivo.max' => 'A licenca ambiental deve ter no maximo 5MB.',
         ];
     }
 }

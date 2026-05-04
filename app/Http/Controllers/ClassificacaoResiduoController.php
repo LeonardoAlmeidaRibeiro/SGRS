@@ -107,6 +107,8 @@ class ClassificacaoResiduoController extends Controller
                 'max:50',
                 Rule::unique('classificacoes_residuo', 'codigo')->ignore($ignoreId),
             ],
+            'classe_nbr10004' => ['required', 'in:perigoso,nao_perigoso'],
+            'codigo_cer' => ['nullable', 'string', 'max:50'],
             'exige_mtr' => ['nullable', 'boolean'],
             'exige_cadri' => ['nullable', 'boolean'],
         ];
@@ -129,6 +131,9 @@ class ClassificacaoResiduoController extends Controller
             'codigo.required' => 'O codigo e obrigatorio.',
             'codigo.unique' => 'Este codigo ja esta cadastrado.',
             'codigo.max' => 'O codigo deve ter no maximo 50 caracteres.',
+            'classe_nbr10004.required' => 'Informe a classe NBR 10004.',
+            'classe_nbr10004.in' => 'Informe uma classe NBR 10004 valida.',
+            'codigo_cer.max' => 'O codigo CER deve ter no maximo 50 caracteres.',
         ];
     }
 }

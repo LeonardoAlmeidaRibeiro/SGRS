@@ -93,6 +93,10 @@
                                             <div>
                                                 <h4 class="fw-bolder mb-1">{{ $residuo->tipo_material }}</h4>
                                                 <div class="text-muted fs-7">{{ optional($residuo->empresa)->nome }}</div>
+                                                <div class="fs-8 mt-1">
+                                                    <span class="badge badge-light-warning">Nota {{ number_format((float) optional($residuo->empresa)->reputacao_media, 1, ',', '.') }}</span>
+                                                    <span class="badge badge-light-info">Conformidade {{ number_format((float) optional($residuo->empresa)->taxa_conformidade, 0, ',', '.') }}%</span>
+                                                </div>
                                             </div>
                                             <span class="badge badge-success">Disponível</span>
                                         </div>

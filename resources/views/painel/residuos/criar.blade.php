@@ -12,7 +12,7 @@
                 </div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('residuos.store') }}">
+                    <form method="POST" action="{{ route('residuos.store') }}" enctype="multipart/form-data">
                         @csrf
 
                         @include('painel.residuos._form')

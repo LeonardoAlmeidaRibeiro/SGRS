@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Avaliacao;
 use App\Models\Empresa;
 use App\Models\Transacao;
+use App\Services\ReputacaoEmpresaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,16 +23,17 @@ class AvaliacaoController extends Controller
         return view('painel.avaliacoes.form', $this->options());
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ReputacaoEmpresaService $reputacaoService)
     {
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        Avaliacao::create($validator->validated());
+        $avaliacao = Avaliacao::create($this->data($request, $validator->validated()));
+        $reputacaoService->recalcular($avaliacao->empresaAvaliada);
 
-        return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliação cadastrada com sucesso!');
+        return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliacao cadastrada com sucesso!');
     }
 
     public function edit(Avaliacao $avaliacao)
@@ -39,23 +41,34 @@ class AvaliacaoController extends Controller
         return view('painel.avaliacoes.form', array_merge($this->options(), compact('avaliacao')));
     }
 
-    public function update(Request $request, Avaliacao $avaliacao)
+    public function update(Request $request, Avaliacao $avaliacao, ReputacaoEmpresaService $reputacaoService)
     {
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        $avaliacao->update($validator->validated());
+        $empresaAnterior = $avaliacao->empresaAvaliada;
+        $avaliacao->update($this->data($request, $validator->validated()));
+        $reputacaoService->recalcular($avaliacao->empresaAvaliada);
 
-        return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliação atualizada com sucesso!');
+        if ($empresaAnterior && (int) $empresaAnterior->id !== (int) $avaliacao->empresa_avaliada_id) {
+            $reputacaoService->recalcular($empresaAnterior);
+        }
+
+        return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliacao atualizada com sucesso!');
     }
 
-    public function destroy(Avaliacao $avaliacao)
+    public function destroy(Avaliacao $avaliacao, ReputacaoEmpresaService $reputacaoService)
     {
+        $empresa = $avaliacao->empresaAvaliada;
         $avaliacao->delete();
 
-        return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliação excluída com sucesso!');
+        if ($empresa) {
+            $reputacaoService->recalcular($empresa);
+        }
+
+        return redirect()->route('avaliacoes.index')->with('swal_success', 'Avaliacao excluida com sucesso!');
     }
 
     private function options(): array
@@ -73,15 +86,25 @@ class AvaliacaoController extends Controller
             'empresa_avaliadora_id' => ['required', 'exists:empresas,id'],
             'empresa_avaliada_id' => ['required', 'exists:empresas,id'],
             'nota' => ['required', 'integer', 'between:1,5'],
+            'residuo_conforme' => ['nullable', 'boolean'],
             'comentario' => ['nullable', 'string'],
         ];
+    }
+
+    private function data(Request $request, array $validated): array
+    {
+        $validated['residuo_conforme'] = $request->has('residuo_conforme')
+            ? $request->boolean('residuo_conforme')
+            : null;
+
+        return $validated;
     }
 
     private function messages(): array
     {
         return [
-            '*.required' => 'Preencha todos os campos obrigatórios.',
-            '*.exists' => 'Informe um registro válido.',
+            '*.required' => 'Preencha todos os campos obrigatorios.',
+            '*.exists' => 'Informe um registro valido.',
             'nota.between' => 'A nota deve ser de 1 a 5.',
         ];
     }

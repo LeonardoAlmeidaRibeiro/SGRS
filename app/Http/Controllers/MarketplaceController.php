@@ -7,6 +7,7 @@ use App\Models\Residuo;
 use App\Models\Transacao;
 use App\Services\ImpactoCalculatorService;
 use App\Services\MatchInteligenteService;
+use App\Services\RastreabilidadeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,12 @@ class MarketplaceController extends Controller
     public function index(Request $request)
     {
         $query = Residuo::with(['empresa', 'classificacao', 'unidade'])
-            ->where('residuos.status', 'disponivel');
+            ->where('residuos.status', 'disponivel')
+            ->where('residuos.documentacao_validada', true)
+            ->where(function ($docs) {
+                $docs->whereNotNull('residuos.mtr_url')
+                    ->orWhereNotNull('residuos.licenca_ambiental_url');
+            });
 
         if ($request->filled('tipo_material')) {
             $query->where('residuos.tipo_material', 'like', '%' . $request->tipo_material . '%');
@@ -66,6 +72,7 @@ class MarketplaceController extends Controller
     {
         $residuo = Residuo::with(['empresa', 'classificacao', 'unidade'])
             ->where('residuos.status', 'disponivel')
+            ->where('residuos.documentacao_validada', true)
             ->find($id);
 
         if (!$residuo) {
@@ -79,14 +86,25 @@ class MarketplaceController extends Controller
         return view('painel.marketplace.visualizar', compact('residuo', 'matches'));
     }
 
-    public function reservar($id, ImpactoCalculatorService $impactoService)
+    public function reservar($id, ImpactoCalculatorService $impactoService, RastreabilidadeService $rastreabilidadeService)
     {
-        $residuo = Residuo::where('residuos.status', 'disponivel')->find($id);
+        $residuo = Residuo::with(['classificacao', 'empresa'])
+            ->where('residuos.status', 'disponivel')
+            ->where('residuos.documentacao_validada', true)
+            ->find($id);
 
         if (!$residuo) {
             return redirect()
                 ->route('marketplace.index')
                 ->with('swal_error', 'Este resíduo não está mais disponível.');
+        }
+
+        $empresaDestino = optional(Auth::user())->empresa;
+
+        if (!$empresaDestino) {
+            return redirect()
+                ->route('marketplace.show', $residuo->id)
+                ->with('swal_error', 'Seu usuario precisa estar vinculado a uma empresa para registrar interesse.');
         }
 
         if (Auth::check() && (int) $residuo->empresa_id === (int) Auth::user()->empresa_id) {
@@ -95,19 +113,34 @@ class MarketplaceController extends Controller
                 ->with('swal_error', 'Sua empresa já é a responsável por este resíduo.');
         }
 
+        if ($empresaDestino->restrita_por_reputacao || ((float) $empresaDestino->reputacao_media > 0 && (float) $empresaDestino->reputacao_media < 3)) {
+            return redirect()
+                ->route('marketplace.show', $residuo->id)
+                ->with('swal_error', 'Sua empresa esta com restricao por reputacao baixa e nao pode reservar novos residuos no momento.');
+        }
+
+        if (optional($residuo->classificacao)->eh_perigoso && !$empresaDestino->podeReceberResiduoPerigoso()) {
+            return redirect()
+                ->route('marketplace.show', $residuo->id)
+                ->with('swal_error', 'Residuo perigoso so pode ser transferido para empresas com licenca ambiental especifica valida.');
+        }
+
         try {
             DB::beginTransaction();
 
-            $transacao = Transacao::create([
+            $dadosTransacao = $rastreabilidadeService->prepararTransacao([
                 'residuo_id' => $residuo->id,
                 'empresa_origem_id' => $residuo->empresa_id,
-                'empresa_destino_id' => Auth::user()->empresa_id,
+                'empresa_destino_id' => $empresaDestino->id,
                 'status' => 'pendente',
                 'data_transacao' => now()->toDateString(),
             ]);
 
+            $transacao = Transacao::create($dadosTransacao);
+
             $residuo->update(['status' => 'reservado']);
             $transacao->impacto()->create($impactoService->calcular($transacao));
+            $rastreabilidadeService->registrar($transacao, 'interesse_registrado', 'Empresa destino registrou interesse pelo residuo.', $residuo->mtr_url ?: $residuo->licenca_ambiental_url);
 
             DB::commit();
         } catch (\Exception $e) {

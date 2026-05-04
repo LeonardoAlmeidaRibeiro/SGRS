@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/painel/meu-perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
     Route::put('/painel/meu-perfil/dados-pessoais', [PerfilController::class, 'updateDadosPessoais'])->name('perfil.dados-pessoais.update');
     Route::put('/painel/meu-perfil/endereco', [PerfilController::class, 'updateEndereco'])->name('perfil.endereco.update');
+    Route::put('/painel/meu-perfil/empresa-legal', [PerfilController::class, 'updateEmpresaLegal'])->name('perfil.empresa-legal.update');
 });
 
 Route::get('/painel/unidades-medida', [UnidadeMedidaController::class, 'index'])->name('unidades-medida.index');

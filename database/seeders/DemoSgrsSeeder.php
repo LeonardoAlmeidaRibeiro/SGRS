@@ -8,11 +8,13 @@ use App\Models\DocumentoTransacao;
 use App\Models\Empresa;
 use App\Models\Impacto;
 use App\Models\Interesse;
+use App\Models\RastreabilidadeLog;
 use App\Models\Residuo;
 use App\Models\Transacao;
 use App\Models\UnidadeMedida;
 use App\Models\User;
 use App\Services\CalculoCarbonoService;
+use App\Services\ReputacaoEmpresaService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,6 +29,8 @@ class DemoSgrsSeeder extends Seeder
         if ($classificacoes->isEmpty() || $unidades->isEmpty()) {
             return;
         }
+
+        $this->atualizarClassificacoesLegais($classificacoes);
 
         $residuos = $this->criarResiduos($empresas, $classificacoes, $unidades);
         $this->criarInteresses($empresas, $classificacoes);
@@ -52,6 +56,11 @@ class DemoSgrsSeeder extends Seeder
                 'estado' => 'SP',
                 'latitude' => -23.561684,
                 'longitude' => -46.655981,
+                'possui_licenca_ambiental' => true,
+                'licenca_residuos_perigosos' => false,
+                'numero_licenca_ambiental' => 'LA-SP-1001',
+                'validade_licenca_ambiental' => now()->addYears(2)->toDateString(),
+                'licenca_ambiental_url' => 'https://example.com/licencas/ecoplast.pdf',
                 'usuarios' => [
                     ['name' => 'Ana EcoPlast', 'email' => 'ana@ecoplast.test', 'perfil' => 'admin'],
                     ['name' => 'Bruno EcoPlast', 'email' => 'bruno@ecoplast.test', 'perfil' => 'operador'],
@@ -70,6 +79,11 @@ class DemoSgrsSeeder extends Seeder
                 'estado' => 'MG',
                 'latitude' => -19.932,
                 'longitude' => -44.053,
+                'possui_licenca_ambiental' => true,
+                'licenca_residuos_perigosos' => true,
+                'numero_licenca_ambiental' => 'LA-MG-2202',
+                'validade_licenca_ambiental' => now()->addYears(2)->toDateString(),
+                'licenca_ambiental_url' => 'https://example.com/licencas/metalvale.pdf',
                 'usuarios' => [
                     ['name' => 'Carla MetalVale', 'email' => 'carla@metalvale.test', 'perfil' => 'admin'],
                     ['name' => 'Diego MetalVale', 'email' => 'diego@metalvale.test', 'perfil' => 'operador'],
@@ -88,6 +102,11 @@ class DemoSgrsSeeder extends Seeder
                 'estado' => 'PR',
                 'latitude' => -25.428954,
                 'longitude' => -49.267137,
+                'possui_licenca_ambiental' => true,
+                'licenca_residuos_perigosos' => false,
+                'numero_licenca_ambiental' => 'LA-PR-3303',
+                'validade_licenca_ambiental' => now()->addYears(2)->toDateString(),
+                'licenca_ambiental_url' => 'https://example.com/licencas/biocomposta.pdf',
                 'usuarios' => [
                     ['name' => 'Elisa BioComposta', 'email' => 'elisa@biocomposta.test', 'perfil' => 'admin'],
                     ['name' => 'Felipe BioComposta', 'email' => 'felipe@biocomposta.test', 'perfil' => 'operador'],
@@ -125,6 +144,19 @@ class DemoSgrsSeeder extends Seeder
         }
 
         return $empresas;
+    }
+
+    private function atualizarClassificacoesLegais($classificacoes): void
+    {
+        foreach ($classificacoes as $index => $classificacao) {
+            $perigoso = in_array($index, [0, 2], true);
+            $classificacao->update([
+                'classe_nbr10004' => $perigoso ? 'perigoso' : 'nao_perigoso',
+                'codigo_cer' => 'CER-' . str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
+                'exige_mtr' => $perigoso ? true : $classificacao->exige_mtr,
+                'exige_cadri' => $perigoso ? true : $classificacao->exige_cadri,
+            ]);
+        }
     }
 
     private function criarResiduos($empresas, $classificacoes, $unidades)
@@ -219,6 +251,16 @@ class DemoSgrsSeeder extends Seeder
                     'estado' => $item['empresa']->estado,
                     'latitude' => $item['empresa']->latitude,
                     'longitude' => $item['empresa']->longitude,
+                    'mtr_url' => 'https://example.com/documentos/mtr-residuo-' . strtolower(str_replace(' ', '-', $item['tipo_material'])) . '.pdf',
+                    'licenca_ambiental_url' => $item['empresa']->licenca_ambiental_url,
+                    'checklist_origem_preenchido' => true,
+                    'checklist_quantidade_confirmada' => true,
+                    'checklist_acondicionamento_confirmado' => true,
+                    'checklist_documentos_conferidos' => true,
+                    'assinatura_digital' => 'Seed Demo - Responsavel Legal',
+                    'checklist_assinado_em' => now(),
+                    'documentacao_validada' => true,
+                    'observacao_validacao' => 'Validacao automatica por seed de demonstracao.',
                 ]
             );
         });
@@ -259,7 +301,7 @@ class DemoSgrsSeeder extends Seeder
             [$residuos[5], $empresas[2], $empresas[1], 'aprovado', now()->subDays(9)->toDateString()],
         ];
 
-        return collect($dados)->map(function ($item) {
+        $transacoes = collect($dados)->map(function ($item) {
             return Transacao::updateOrCreate(
                 [
                     'residuo_id' => $item[0]->id,
@@ -269,9 +311,35 @@ class DemoSgrsSeeder extends Seeder
                 [
                     'status' => $item[3],
                     'data_transacao' => $item[4],
+                    'data_recebimento' => $item[3] === 'concluido' ? now()->subDays(15) : null,
+                    'codigo_rastreio' => 'TRC-SEED-' . str_pad($item[0]->id, 5, '0', STR_PAD_LEFT),
+                    'hash_rastreio' => hash('sha256', 'TRC-SEED-' . $item[0]->id . '-' . $item[3]),
                 ]
             );
         });
+
+        foreach ($transacoes as $transacao) {
+            $this->criarLogRastreabilidade($transacao, 'transacao_seed', 'Transacao criada pelo seed de demonstracao.');
+        }
+
+        return $transacoes;
+    }
+
+    private function criarLogRastreabilidade(Transacao $transacao, string $acao, string $descricao): void
+    {
+        RastreabilidadeLog::updateOrCreate(
+            [
+                'transacao_id' => $transacao->id,
+                'acao' => $acao,
+            ],
+            [
+                'empresa_id' => $transacao->empresa_origem_id,
+                'user_id' => null,
+                'descricao' => $descricao,
+                'documento_url' => optional($transacao->residuo)->mtr_url,
+                'hash_evento' => hash('sha256', $transacao->codigo_rastreio . '|' . $acao . '|' . $descricao),
+            ]
+        );
     }
 
     private function criarDocumentos($transacoes): void
@@ -334,9 +402,12 @@ class DemoSgrsSeeder extends Seeder
                 ],
                 [
                     'nota' => 5,
+                    'residuo_conforme' => true,
                     'comentario' => 'Transacao concluida com documentacao organizada e bom aproveitamento do residuo.',
                 ]
             );
+
+            (new ReputacaoEmpresaService())->recalcular($transacao->empresaOrigem);
         }
     }
 }

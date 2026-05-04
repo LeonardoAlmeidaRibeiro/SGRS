@@ -32,6 +32,13 @@
                                 <div>
                                     <h2 class="fw-bolder mb-1">{{ $residuo->tipo_material }}</h2>
                                     <div class="text-muted">{{ optional($residuo->empresa)->nome }}</div>
+                                    <div class="mt-2">
+                                        <span class="badge badge-light-warning">Nota {{ number_format((float) optional($residuo->empresa)->reputacao_media, 1, ',', '.') }}</span>
+                                        <span class="badge badge-light-info">Conformidade {{ number_format((float) optional($residuo->empresa)->taxa_conformidade, 0, ',', '.') }}%</span>
+                                        @if(optional($residuo->empresa)->restrita_por_reputacao || ((float) optional($residuo->empresa)->reputacao_media > 0 && (float) optional($residuo->empresa)->reputacao_media < 3))
+                                            <span class="badge badge-light-danger">Reputacao baixa</span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <span class="badge badge-success">Disponível</span>
                             </div>

@@ -44,6 +44,8 @@
                                 <tr class="fw-bolder text-muted bg-secondary">
                                     <th class="ps-4 min-w-200px rounded-start">Nome</th>
                                     <th class="ps-4 min-w-150px">Código</th>
+                                    <th class="min-w-130px">Classe</th>
+                                    <th class="min-w-120px">Codigo CER</th>
                                     <th class="min-w-100px">Exige MTR</th>
                                     <th class="min-w-100px">Exige CADRI</th>
                                     <th class="min-w-200px text-end rounded-end"></th>
@@ -67,6 +69,20 @@
                                         <a href="#" onClick="return abrirModalEditar({{ $classificacao->id }});" class="text-dark fw-bolder text-hover-primary d-block mb-1 fs-6" data-bs-toggle="modal" data-bs-target="#modal_editar">
                                             <div id="celula_codigo_{{ $classificacao->id }}">{{ $classificacao->codigo }}</div>
                                         </a>
+                                    </td>
+
+                                    <td>
+                                        <div id="celula_classe_nbr10004_{{ $classificacao->id }}">
+                                            @if($classificacao->classe_nbr10004 === 'perigoso')
+                                            <span class="badge badge-danger">Perigoso</span>
+                                            @else
+                                            <span class="badge badge-info">Nao perigoso</span>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div id="celula_codigo_cer_{{ $classificacao->id }}">{{ $classificacao->codigo_cer }}</div>
                                     </td>
 
                                     <td>
