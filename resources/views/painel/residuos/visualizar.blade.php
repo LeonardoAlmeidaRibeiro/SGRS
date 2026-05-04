@@ -40,7 +40,11 @@
                             <div class="text-muted fw-bold">Descrição</div>
                             <div class="fs-5">{{ $residuo->descricao ?: '-' }}</div>
                         </div>
-                        <div class="col-md-6 mb-6">
+                        <div class="col-md-3 mb-6">
+                            <div class="text-muted fw-bold">CEP</div>
+                            <div class="fs-5">{{ $residuo->cep ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-3 mb-6">
                             <div class="text-muted fw-bold">Endereço</div>
                             <div class="fs-5">{{ $residuo->endereco }}</div>
                         </div>

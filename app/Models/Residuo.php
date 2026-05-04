@@ -27,6 +27,7 @@ class Residuo extends Model
         'quantidade',
         'unidade_id',
         'status',
+        'cep',
         'endereco',
         'cidade',
         'estado',

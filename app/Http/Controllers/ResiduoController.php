@@ -10,6 +10,7 @@ use App\Support\EmpresaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -301,9 +302,10 @@ class ResiduoController extends Controller
             'quantidade' => ['required', 'numeric', 'min:0'],
             'unidade_id' => ['required', 'exists:unidades_medida,id'],
             'status' => ['required', 'in:disponivel,reservado,finalizado'],
-            'endereco' => ['required', 'string', 'max:255'],
-            'cidade' => ['required', 'string', 'max:255'],
-            'estado' => ['required', 'string', 'size:2'],
+            'cep' => ['nullable', 'string', 'max:9'],
+            'endereco' => ['nullable', 'string', 'max:255'],
+            'cidade' => ['nullable', 'string', 'max:255'],
+            'estado' => ['nullable', 'string', 'size:2'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
@@ -319,11 +321,21 @@ class ResiduoController extends Controller
             $validated['empresa_id'] = Auth::user()->empresa_id;
         }
 
-        $validated['estado'] = strtoupper($validated['estado']);
+        $validated['cep'] = $this->formatarCep($validated['cep'] ?? null);
         $validated['checklist_origem_preenchido'] = $request->boolean('checklist_origem_preenchido');
         $validated['checklist_quantidade_confirmada'] = $request->boolean('checklist_quantidade_confirmada');
         $validated['checklist_acondicionamento_confirmado'] = $request->boolean('checklist_acondicionamento_confirmado');
         $validated['checklist_documentos_conferidos'] = $request->boolean('checklist_documentos_conferidos');
+        $validated = $this->preencherCoordenadasPorCep($validated);
+        $validated['estado'] = strtoupper($validated['estado'] ?? '');
+
+        if (empty($validated['endereco']) || empty($validated['cidade']) || empty($validated['estado'])) {
+            throw new \InvalidArgumentException('Informe um CEP valido ou preencha endereco, cidade e UF manualmente.');
+        }
+
+        if (($validated['latitude'] ?? '') === '' || ($validated['longitude'] ?? '') === '') {
+            throw new \InvalidArgumentException('Nao foi possivel obter latitude e longitude pelo CEP. Confira o CEP/endereco ou preencha as coordenadas manualmente.');
+        }
 
         if ($request->hasFile('mtr_arquivo')) {
             $validated['mtr_url'] = $this->salvarArquivoPublico($request, 'mtr_arquivo', 'documentos_residuos');
@@ -360,6 +372,79 @@ class ResiduoController extends Controller
             : 'Documentacao pendente.';
 
         return $validated;
+    }
+
+    private function preencherCoordenadasPorCep(array $validated): array
+    {
+        if (!empty($validated['latitude']) && !empty($validated['longitude'])) {
+            return $validated;
+        }
+
+        $cep = preg_replace('/\D/', '', $validated['cep'] ?? '');
+
+        if (strlen($cep) !== 8) {
+            return $validated;
+        }
+
+        try {
+            $enderecoCep = Http::timeout(5)->get("https://viacep.com.br/ws/{$cep}/json/")->json();
+
+            if (empty($enderecoCep) || !empty($enderecoCep['erro'])) {
+                return $validated;
+            }
+
+            if (empty($validated['endereco']) && !empty($enderecoCep['logradouro'])) {
+                $validated['endereco'] = $enderecoCep['logradouro'];
+            }
+
+            if (empty($validated['cidade']) && !empty($enderecoCep['localidade'])) {
+                $validated['cidade'] = $enderecoCep['localidade'];
+            }
+
+            if (empty($validated['estado']) && !empty($enderecoCep['uf'])) {
+                $validated['estado'] = $enderecoCep['uf'];
+            }
+
+            $busca = implode(', ', array_filter([
+                $validated['endereco'] ?? null,
+                $validated['cidade'] ?? ($enderecoCep['localidade'] ?? null),
+                $validated['estado'] ?? ($enderecoCep['uf'] ?? null),
+                $cep,
+                'Brasil',
+            ]));
+
+            $geocode = Http::withHeaders([
+                'User-Agent' => 'SGRS/1.0 contato@sgrs.local',
+            ])
+                ->timeout(8)
+                ->get('https://nominatim.openstreetmap.org/search', [
+                    'format' => 'json',
+                    'limit' => 1,
+                    'countrycodes' => 'br',
+                    'q' => $busca,
+                ])
+                ->json();
+
+            if (!empty($geocode[0]['lat']) && !empty($geocode[0]['lon'])) {
+                $validated['latitude'] = ($validated['latitude'] ?? null) ?: $geocode[0]['lat'];
+                $validated['longitude'] = ($validated['longitude'] ?? null) ?: $geocode[0]['lon'];
+            }
+        } catch (\Exception $e) {
+            return $validated;
+        }
+
+        return $validated;
+    }
+
+    private function formatarCep(?string $cep): ?string
+    {
+        $numeros = preg_replace('/\D/', '', (string) $cep);
+
+        if (strlen($numeros) !== 8) {
+            return $cep ?: null;
+        }
+
+        return substr($numeros, 0, 5) . '-' . substr($numeros, 5, 3);
     }
 
     private function salvarArquivoPublico(Request $request, string $campo, string $pasta): string
@@ -405,6 +490,7 @@ class ResiduoController extends Controller
             'unidade_id.exists' => 'Informe uma unidade de medida válida.',
             'status.required' => 'O status é obrigatório.',
             'status.in' => 'Informe um status válido.',
+            'cep.max' => 'O CEP deve ter no maximo 9 caracteres.',
             'endereco.required' => 'O endereço é obrigatório.',
             'endereco.max' => 'O endereço deve ter no máximo 255 caracteres.',
             'cidade.required' => 'A cidade é obrigatória.',

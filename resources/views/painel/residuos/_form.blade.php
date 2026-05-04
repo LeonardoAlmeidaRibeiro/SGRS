@@ -65,7 +65,13 @@
         </select>
     </div>
 
-    <div class="col-md-8 mb-7">
+    <div class="col-md-3 mb-7">
+        <label class="fs-6 fw-bold form-label mb-2">CEP</label>
+        <input type="text" class="form-control form-control-solid" name="cep" maxlength="9" placeholder="00000-000" value="{{ old('cep', $residuo->cep ?? '') }}">
+        <div class="text-muted fs-8 mt-1" data-cep-status></div>
+    </div>
+
+    <div class="col-md-5 mb-7">
         <label class="required fs-6 fw-bold form-label mb-2">Endereço</label>
         <input type="text" class="form-control form-control-solid" name="endereco" value="{{ old('endereco', $residuo->endereco ?? '') }}">
     </div>
@@ -149,3 +155,115 @@
         <input type="text" class="form-control form-control-solid" name="assinatura_digital" value="{{ old('assinatura_digital', $residuo->assinatura_digital ?? '') }}" placeholder="Nome completo, CPF ou identificador digital">
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var cepInput = document.querySelector('[name="cep"]');
+        var enderecoInput = document.querySelector('[name="endereco"]');
+        var cidadeInput = document.querySelector('[name="cidade"]');
+        var estadoInput = document.querySelector('[name="estado"]');
+        var latitudeInput = document.querySelector('[name="latitude"]');
+        var longitudeInput = document.querySelector('[name="longitude"]');
+        var statusEl = document.querySelector('[data-cep-status]');
+
+        if (!cepInput || !enderecoInput || !cidadeInput || !estadoInput || !latitudeInput || !longitudeInput) {
+            return;
+        }
+
+        function setStatus(message) {
+            if (statusEl) {
+                statusEl.textContent = message || '';
+            }
+        }
+
+        function aplicarMascaraCep(value) {
+            var numeros = value.replace(/\D/g, '').slice(0, 8);
+            return numeros.length > 5 ? numeros.slice(0, 5) + '-' + numeros.slice(5) : numeros;
+        }
+
+        function montarBusca() {
+            return [
+                enderecoInput.value,
+                cidadeInput.value,
+                estadoInput.value,
+                cepInput.value,
+                'Brasil'
+            ].filter(Boolean).join(', ');
+        }
+
+        function buscarCoordenadas() {
+            var busca = montarBusca();
+
+            if (!busca || (latitudeInput.value && longitudeInput.value)) {
+                return Promise.resolve();
+            }
+
+            setStatus('Buscando latitude e longitude...');
+
+            return fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=' + encodeURIComponent(busca))
+                .then(function (response) {
+                    return response.ok ? response.json() : [];
+                })
+                .then(function (data) {
+                    if (data && data.length) {
+                        latitudeInput.value = data[0].lat;
+                        longitudeInput.value = data[0].lon;
+                        setStatus('Coordenadas preenchidas automaticamente.');
+                    } else {
+                        setStatus('Nao foi possivel encontrar as coordenadas. Confira o endereco.');
+                    }
+                })
+                .catch(function () {
+                    setStatus('Nao foi possivel buscar as coordenadas agora.');
+                });
+        }
+
+        function buscarCep() {
+            var cep = cepInput.value.replace(/\D/g, '');
+
+            if (cep.length !== 8) {
+                setStatus('');
+                return;
+            }
+
+            setStatus('Buscando endereco pelo CEP...');
+
+            fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                .then(function (response) {
+                    return response.ok ? response.json() : null;
+                })
+                .then(function (data) {
+                    if (!data || data.erro) {
+                        setStatus('CEP nao encontrado.');
+                        return;
+                    }
+
+                    if (!enderecoInput.value && data.logradouro) {
+                        enderecoInput.value = data.logradouro;
+                    }
+
+                    if (!cidadeInput.value && data.localidade) {
+                        cidadeInput.value = data.localidade;
+                    }
+
+                    if (!estadoInput.value && data.uf) {
+                        estadoInput.value = data.uf;
+                    }
+
+                    buscarCoordenadas();
+                })
+                .catch(function () {
+                    setStatus('Nao foi possivel buscar o CEP agora.');
+                });
+        }
+
+        cepInput.addEventListener('input', function () {
+            cepInput.value = aplicarMascaraCep(cepInput.value);
+        });
+
+        cepInput.addEventListener('blur', buscarCep);
+        enderecoInput.addEventListener('blur', buscarCoordenadas);
+        cidadeInput.addEventListener('blur', buscarCoordenadas);
+        estadoInput.addEventListener('blur', buscarCoordenadas);
+    });
+</script>
