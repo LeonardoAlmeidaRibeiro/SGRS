@@ -78,6 +78,36 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="separator my-10"></div>
+
+                    <h3 class="fw-bolder mb-5">Match inteligente</h3>
+                    <div class="table-responsive">
+                        <table class="table table-row-bordered align-middle gs-0 gy-3">
+                            <thead>
+                                <tr class="fw-bolder text-muted bg-secondary">
+                                    <th class="ps-4">Empresa interessada</th>
+                                    <th>Demanda</th>
+                                    <th>Distância</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse (($matches ?? collect()) as $match)
+                                    <tr>
+                                        <td class="ps-4">{{ optional($match->empresa)->nome }}</td>
+                                        <td>{{ $match->tipo_material }}</td>
+                                        <td>{{ $match->distancia_km !== null ? $match->distancia_km . ' km' : '-' }}</td>
+                                        <td><span class="badge badge-success">{{ $match->match_score }}%</span></td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-6 text-muted">Nenhuma empresa com interesse compatível encontrada.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,7 +132,7 @@
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33'
         }).then(function (result) {
-            if (result.isConfirmed) {
+            if (result.isConfirmed || result.value) {
                 form.submit();
             }
         });

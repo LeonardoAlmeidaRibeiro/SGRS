@@ -83,6 +83,69 @@
                     </a>
                 </div>
 
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('interesses.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-bullseye fs-2"></i>
+                        </span>
+                        <span class="menu-title">Interesses</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('transacoes.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-handshake fs-2"></i>
+                        </span>
+                        <span class="menu-title">Transações</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('documentos-transacao.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-file-alt fs-2"></i>
+                        </span>
+                        <span class="menu-title">Documentos</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('impactos.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-leaf fs-2"></i>
+                        </span>
+                        <span class="menu-title">Impactos</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('avaliacoes.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-star fs-2"></i>
+                        </span>
+                        <span class="menu-title">Avaliações</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('dashboard-sustentavel.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-chart-line fs-2"></i>
+                        </span>
+                        <span class="menu-title">Dashboard</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="{{ route('relatorio-carbono.index') }}">
+                        <span class="menu-icon">
+                            <i class="las la-cloud fs-2"></i>
+                        </span>
+                        <span class="menu-title">Relatório Carbono</span>
+                    </a>
+                </div>
+
 
 
 

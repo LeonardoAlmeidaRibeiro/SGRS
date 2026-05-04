@@ -151,7 +151,7 @@
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33'
         }).then(function (result) {
-            if (result.isConfirmed) {
+            if (result.isConfirmed || result.value) {
                 form.submit();
             }
         });

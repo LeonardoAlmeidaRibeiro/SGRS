@@ -12,38 +12,50 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $empresa = Empresa::updateOrCreate(
+            ['cnpj' => '00.000.000/0001-00'],
+            [
+                'nome' => 'Empresa Teste',
+                'email' => 'empresa@teste.com',
+                'tipo_industria' => 'TI',
+                'telefone' => '(11) 99999-9999',
+                'cep' => '00000-000',
+                'endereco' => 'Rua Teste',
+                'numero' => '123',
+                'cidade' => 'Sao Paulo',
+                'estado' => 'SP',
+                'latitude' => -23.5505200,
+                'longitude' => -46.6333080,
+            ]
+        );
 
-        $empresa = Empresa::create([
-            'nome' => 'Empresa Teste',
-            'email' => 'empresa@teste.com',
-            'tipo_industria' => 'TI',
-            'cnpj' => '00.000.000/0001-00',
-            'telefone' => '(11) 99999-9999',
-            'cep' => '00000-000',
-            'endereco' => 'Rua Teste',
-            'numero' => '123',
-            'cidade' => 'São Paulo',
-            'estado' => 'SP',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@teste.com'],
+            [
+                'empresa_id' => $empresa->id,
+                'name' => 'Admin',
+                'password' => Hash::make('123456'),
+                'perfil' => 'admin',
+            ]
+        );
 
-        User::create([
-            'empresa_id' => $empresa->id,
-            'name' => 'Admin',
-            'email' => 'admin@teste.com',
-            'password' => Hash::make('123456'),
-            'perfil' => 'admin',
-        ]);;
+        User::updateOrCreate(
+            ['email' => 'operador@teste.com'],
+            [
+                'empresa_id' => $empresa->id,
+                'name' => 'Operador Teste',
+                'password' => Hash::make('123456'),
+                'perfil' => 'operador',
+            ]
+        );
 
         $this->call(EstadosTableSeeder::class);
         $this->call(CidadesTableSeeder::class);
         $this->call(ClassificacoesResiduoSeeder::class);
         $this->call(UnidadesMedidaSeeder::class);
         $this->call(ResiduosSeeder::class);
+        $this->call(DemoSgrsSeeder::class);
     }
 }

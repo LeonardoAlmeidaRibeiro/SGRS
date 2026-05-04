@@ -33,4 +33,14 @@ class Empresa extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function interesses()
+    {
+        return $this->hasMany(Interesse::class);
+    }
+
+    public function residuos()
+    {
+        return $this->hasMany(Residuo::class);
+    }
 }
