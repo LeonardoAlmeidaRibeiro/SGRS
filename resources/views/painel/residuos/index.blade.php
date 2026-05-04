@@ -1,5 +1,45 @@
 @include('layout.header')
 
+<style>
+    .residuos-pagination nav {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .residuos-pagination .pagination {
+        margin: 0;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .residuos-pagination .page-link {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 13px;
+        line-height: 1;
+    }
+
+    .residuos-pagination svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    .residuos-pagination p,
+    .residuos-pagination .text-sm {
+        margin: 0;
+        font-size: 12px;
+    }
+
+    .residuos-pagination .hidden {
+        display: none !important;
+    }
+</style>
+
 <div id="kt_content" class="content d-flex flex-column flex-column-fluid">
     <div id="kt_post" class="post d-flex flex-column-fluid">
         <div id="kt_content_container" class="container-fluid">
@@ -99,7 +139,9 @@
                         </table>
                     </div>
 
-                    {{ $residuos->links() }}
+                    <div class="residuos-pagination mt-6">
+                        {{ $residuos->links() }}
+                    </div>
                 </div>
             </div>
         </div>

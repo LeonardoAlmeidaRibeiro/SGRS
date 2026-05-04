@@ -28,11 +28,6 @@
                                 Endereço pessoal
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ $tabAtiva === 'empresa' ? 'active' : '' }}" data-bs-toggle="tab" href="#tab_empresa_legal">
-                                Conformidade da empresa
-                            </a>
-                        </li>
                     </ul>
 
                     <div class="tab-content">
@@ -146,69 +141,6 @@
                             </form>
                         </div>
 
-                        <div class="tab-pane fade {{ $tabAtiva === 'empresa' ? 'show active' : '' }}" id="tab_empresa_legal" role="tabpanel">
-                            @php $empresa = optional($usuario)->empresa; @endphp
-
-                            @if ($errors->empresaLegal->any())
-                                <div class="alert alert-danger">
-                                    @foreach ($errors->empresaLegal->all() as $erro)
-                                        <div>{{ $erro }}</div>
-                                    @endforeach
-                                </div>
-                            @endif
-
-                            @if($empresa)
-                                <form method="POST" action="{{ route('perfil.empresa-legal.update') }}" enctype="multipart/form-data">
-                                    @csrf
-                                    @method('PUT')
-
-                                    <div class="row">
-                                        <div class="col-md-4 mb-7">
-                                            <label class="fs-6 fw-bold form-label mb-2">Empresa</label>
-                                            <input type="text" class="form-control form-control-solid" value="{{ $empresa->nome }}" disabled>
-                                        </div>
-
-                                        <div class="col-md-4 mb-7">
-                                            <label class="fs-6 fw-bold form-label mb-2">Numero da licenca</label>
-                                            <input type="text" class="form-control form-control-solid" name="numero_licenca_ambiental" value="{{ old('numero_licenca_ambiental', $empresa->numero_licenca_ambiental) }}">
-                                        </div>
-
-                                        <div class="col-md-4 mb-7">
-                                            <label class="fs-6 fw-bold form-label mb-2">Validade da licenca</label>
-                                            <input type="date" class="form-control form-control-solid" name="validade_licenca_ambiental" value="{{ old('validade_licenca_ambiental', optional($empresa->validade_licenca_ambiental)->format('Y-m-d')) }}">
-                                        </div>
-
-                                        <div class="col-md-4 mb-7">
-                                            <div class="form-check form-check-custom form-check-solid mt-8">
-                                                <input class="form-check-input" type="checkbox" name="possui_licenca_ambiental" value="1" id="possui_licenca_ambiental" @checked(old('possui_licenca_ambiental', $empresa->possui_licenca_ambiental))>
-                                                <label class="form-check-label" for="possui_licenca_ambiental">Possui licenca ambiental</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4 mb-7">
-                                            <div class="form-check form-check-custom form-check-solid mt-8">
-                                                <input class="form-check-input" type="checkbox" name="licenca_residuos_perigosos" value="1" id="licenca_residuos_perigosos" @checked(old('licenca_residuos_perigosos', $empresa->licenca_residuos_perigosos))>
-                                                <label class="form-check-label" for="licenca_residuos_perigosos">Autorizada para residuos perigosos</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4 mb-7">
-                                            <label class="fs-6 fw-bold form-label mb-2">Arquivo da licenca</label>
-                                            <input type="file" class="form-control form-control-solid" name="licenca_ambiental_arquivo" accept=".pdf,.jpg,.jpeg,.png">
-                                            @if($empresa->licenca_ambiental_url)
-                                                <a href="{{ $empresa->licenca_ambiental_url }}" target="_blank" class="fs-7 mt-2 d-inline-block">Ver licenca atual</a>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <div class="text-end">
-                                        <button type="submit" class="btn btn-primary">Salvar conformidade</button>
-                                    </div>
-                                </form>
-                            @else
-                                <div class="alert alert-warning">Seu usuario nao esta vinculado a uma empresa.</div>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>
@@ -220,14 +152,6 @@
 @include('layout.footer')
 
 <script>
-    @if(session('swal_success'))
-        Swal.fire({ icon: 'success', title: 'Sucesso!', text: @json(session('swal_success')) });
-    @endif
-
-    @if(session('swal_error'))
-        Swal.fire({ icon: 'error', title: 'Oops...', text: @json(session('swal_error')) });
-    @endif
-
     $(document).ready(function () {
         function somenteNumeros(valor) {
             return valor.replace(/\D/g, '');

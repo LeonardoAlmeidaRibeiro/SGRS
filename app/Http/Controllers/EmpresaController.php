@@ -163,12 +163,38 @@ class EmpresaController extends Controller
         $validated['licenca_residuos_perigosos'] = $request->boolean('licenca_residuos_perigosos');
 
         if ($request->hasFile('licenca_ambiental_arquivo')) {
-            $validated['licenca_ambiental_url'] = Storage::url($request->file('licenca_ambiental_arquivo')->store('licencas_empresas', 'public'));
+            $validated['licenca_ambiental_url'] = $this->salvarArquivoPublico($request, 'licenca_ambiental_arquivo', 'licencas_empresas');
         } elseif ($empresa) {
             $validated['licenca_ambiental_url'] = $empresa->licenca_ambiental_url;
         }
 
         return $validated;
+    }
+
+    private function salvarArquivoPublico(Request $request, string $campo, string $pasta): string
+    {
+        $arquivo = $request->file($campo);
+
+        if (!$arquivo || !$arquivo->isValid()) {
+            throw new \InvalidArgumentException('Arquivo invalido. Envie o documento novamente.');
+        }
+
+        $destino = public_path('storage/' . trim($pasta, '/'));
+
+        if (!is_dir($destino) && !mkdir($destino, 0775, true) && !is_dir($destino)) {
+            throw new \InvalidArgumentException('Nao foi possivel criar a pasta de upload em public/storage.');
+        }
+
+        $extensao = $arquivo->getClientOriginalExtension() ?: 'bin';
+        $nomeArquivo = uniqid('doc_', true) . '.' . $extensao;
+        $arquivo->move($destino, $nomeArquivo);
+        $caminho = trim($pasta, '/') . '/' . $nomeArquivo;
+
+        if (!$caminho) {
+            throw new \InvalidArgumentException('Nao foi possivel salvar o arquivo. Verifique a permissao da pasta storage/app/public.');
+        }
+
+        return asset('storage/' . ltrim($caminho, '/'));
     }
 
     private function options(): array

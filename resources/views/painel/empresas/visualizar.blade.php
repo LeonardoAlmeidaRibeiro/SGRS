@@ -22,6 +22,58 @@
                     </div>
 
                     <div class="separator my-8"></div>
+                    <h4 class="fw-bolder mb-5">Conformidade legal</h4>
+                    <div class="row mb-8">
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Licenca ambiental</div>
+                            <div class="fs-5">
+                                @if($empresa->possui_licenca_ambiental)
+                                    <span class="badge badge-success">Possui</span>
+                                @else
+                                    <span class="badge badge-light-danger">Nao informada</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Residuos perigosos</div>
+                            <div class="fs-5">
+                                @if($empresa->licenca_residuos_perigosos)
+                                    <span class="badge badge-success">Autorizada</span>
+                                @else
+                                    <span class="badge badge-light-warning">Nao autorizada</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Numero da licenca</div>
+                            <div class="fs-5">{{ $empresa->numero_licenca_ambiental ?: '-' }}</div>
+                        </div>
+
+                        <div class="col-md-3 mb-5">
+                            <div class="text-muted fw-bold">Validade</div>
+                            <div class="fs-5">
+                                {{ optional($empresa->validade_licenca_ambiental)->format('d/m/Y') ?: '-' }}
+                                @if($empresa->validade_licenca_ambiental && $empresa->validade_licenca_ambiental->isPast())
+                                    <span class="badge badge-light-danger ms-2">Vencida</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mb-5">
+                            <div class="text-muted fw-bold">Arquivo da licenca</div>
+                            <div class="fs-5">
+                                @if($empresa->licenca_ambiental_url)
+                                    <a href="{{ $empresa->licenca_ambiental_url }}" target="_blank" class="btn btn-sm btn-light-info">Abrir documento</a>
+                                @else
+                                    -
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="separator my-8"></div>
                     <h4 class="fw-bolder mb-5">Funcionarios</h4>
                     <form method="POST" action="{{ route('empresas.funcionarios.store', $empresa->id) }}" class="mb-6">
                         @csrf
